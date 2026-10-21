@@ -32,8 +32,8 @@ for n in ["TLB-GIZ","TLB-CAI-E"]:
     reg={"TLB-GIZ":["Giza"],"TLB-CAI-E":["Cairo"]}[n]; rate=rr[rr.region.isin(reg)].units_sold.sum()/14*(1 if n=="TLB-GIZ" else .55)
     sep=y[(y.date>="2026-09-10")&(y.date<="2026-09-30")&(y.oos_hours>0)]
     print(f"Talabat S02 {n}: last on_hand {last.on_hand_units_sellable}, open PO {last.open_po_units} ETA {str(last.next_po_eta_date)[:10]}, ~run rate {rate:.0f}/day -> cover {last.on_hand_units_sellable/max(rate,1):.1f} days | Sept OOS days {len(sep)} ({sep.date.dt.day.tolist()})")
-ia=D[("Amazon","INVENTORY")]; a5=ia[(ia.platform_sku_id==sid[("Amazon","SBC-05")])&(ia.date=="2026-10-18")]
-sa=D[("Amazon","SALES")]; r5=sa[(sa.sku=="SBC-05")&(sa.date>"2026-10-04")].units_sold.sum()/14
+ia=D[("Amazon Core","INVENTORY")]; a5=ia[(ia.platform_sku_id==sid[("Amazon Core","SBC-05")])&(ia.date=="2026-10-18")]
+sa=D[("Amazon Core","SALES")]; r5=sa[(sa.sku=="SBC-05")&(sa.date>"2026-10-04")].units_sold.sum()/14
 print(f"Amazon S05 Aloe: on_hand {a5.on_hand_units_sellable.sum()}, open PO {a5.open_po_units.sum()} (ETA {str(a5.next_po_eta_date.dropna().iloc[0])[:10]}), unhealthy {a5.unhealthy_units.sum()}, run rate {r5:.1f}/day -> cover {a5.on_hand_units_sellable.sum()/r5:.0f} days, with PO {(a5.on_hand_units_sellable.sum()+a5.open_po_units.sum())/r5:.0f} days")
 sv=D[("Noon","SERVICE")]; v=sv[sv.platform_sku_id==sid[("Noon","SBC-09")]]
 print("Noon S09 weekly fill:", v.fully_filled_orders_pct.round(2).tolist()); print("   conf/req:", f"{v.po_units_confirmed.sum()/v.po_units_requested.sum():.0%}", " avg lead time (planned 6):", round(v.avg_lead_time_days.dropna().mean(),1))
@@ -62,7 +62,7 @@ for P in spec.PLATFORM_FOLDERS:
 pdx=pd.DataFrame(rows)
 for P in spec.PLATFORM_FOLDERS:
     g=pdx[pdx.plat==P].groupby("promo").agg(depth=("depth","mean"),uplift=("uplift","mean"),profit_delta_day=("profit_delta_per_day","sum"),skus=("sku","count")); print(P); print(g.round(2).to_string())
-print("\n=== 5 MUST-STOCK / MARKET (final week) ===")
+print("\n=== 5 MARKET SEGMENT SHARE (final week) ===")
 for P in spec.PLATFORM_FOLDERS:
     mk=D[(P,"MKT")]; mk=mk[pd.to_datetime(mk.week_start)=="2026-10-12"]; w=mk[mk.category=="Wipes"].sort_values("rank_by_value")
     print(P,"top wipes:"); print(w[["rank_by_value","brand","product_name","sub_category","gmv_ex_vat_egp","is_own_brand","in_stock_rate_pct"]].head(8).to_string(index=False))

@@ -117,7 +117,7 @@ def main():
             ("generated_on", spec.GENERATED.isoformat()), ("data_status", DATA_STATUS)]
     write_workbook(os.path.join(PACK, SETUP_DIR, setup_file), sheets, meta, guide_rows,
                    "BOOST Brand Master (upload once, then only when something changes)",
-                   ["One workbook, seven tabs. Upload it before any platform file.",
+                   ["One workbook, eight tabs. Upload it before any platform file.",
                     "Every platform file is matched to the brand through the barcode (gtin) and the platform_sku_id listed here.",
                     "Re-upload any time a price, cost, listing, node or target changes. Rows are replaced by key."])
     upload_map.append(dict(
@@ -209,7 +209,7 @@ def write_upload_guide(path, upload_map):
         ws.write(0, 0, "BOOST upload guide: Sprout Baby Care data pack", title)
         lines = [
             ("h", "What this pack is"),
-            ("t", f"Synthetic 13-week data for {spec.BRAND} on Talabat Mart, Noon and Amazon ({spec.START} to {spec.END}), built to the BOOST standard templates."),
+            ("t", f"Synthetic 13-week data for {spec.BRAND} on {len(spec.PLATFORM_FOLDERS)} platforms (Talabat Mart, Noon, Amazon Core, Amazon Now, Breadfast; Amazon is served through two channels) ({spec.START} to {spec.END}), built to the BOOST standard templates."),
             ("t", "Six feeds per platform: Sales, Inventory, Price and Promo, Ads, Market, Service. One setup workbook (Brand Master) ties everything together."),
             ("t", "Numbers are linked: sales drive stock, stock drives lost sales and wasted ad spend, promos drive volume and margin, and the Market feed reconciles to Sales."),
             ("h", "How the folders map to the app"),
@@ -217,9 +217,9 @@ def write_upload_guide(path, upload_map):
             ("t", "The exact slot for every file is in the Upload_Map tab, column 'slot'."),
             ("h", "Upload order"),
             ("t", "Step 1  Setup. Upload 01_Setup/SETUP_00_BRAND_MASTER_v1.xlsx once, first. Other files are rejected until it exists."),
-            ("t", "Step 2  Backfill. Upload the 18 files in 02_Backfill (6 per platform). Any platform order; inside a platform go 01 to 06 (Sales first). Data then runs to 2026-10-11."),
+            ("t", f"Step 2  Backfill. Upload the {6*len(spec.PLATFORM_FOLDERS)} files in 02_Backfill (6 per platform). Any platform order; inside a platform go 01 to 06 (Sales first). Data then runs to 2026-10-11."),
             ("t", "Step 3  Check Data Freshness. Every card should read green and 'data through 11 Oct'."),
-            ("t", "Step 4  Weekly update. Upload the 18 files in 03_Weekly_Update (week of 12 to 18 Oct). Dashboards move to 'data through 18 Oct'. This is the live-upload moment for the demo."),
+            ("t", f"Step 4  Weekly update. Upload the {6*len(spec.PLATFORM_FOLDERS)} files in 03_Weekly_Update (week of 12 to 18 Oct). Dashboards move to 'data through 18 Oct'. This is the live-upload moment for the demo."),
             ("h", "Rules the importer applies"),
             ("t", "Re-uploading a file is safe: rows are replaced by key (see Upload_Map column 'key'), never duplicated."),
             ("t", "A file dropped in the wrong slot is rejected. The importer reads the Meta tab (template_id, platform, period) and compares it with the slot."),
@@ -228,7 +228,7 @@ def write_upload_guide(path, upload_map):
             ("h", "Conventions"),
             ("t", "Currency EGP. All values ex VAT. Percentages stored as fractions (0.15 = 15%). Dates yyyy-mm-dd, Cairo time. Weeks start Monday."),
             ("t", "Barcode (gtin, 13 digits) is the cross-platform key. Platform IDs differ by platform and are mapped in Brand Master > Platform_Listings."),
-            ("t", "Breadfast and Rabbit are not populated. See Platforms_Pending for how a new platform is added."),
+            ("t", "Rabbit is not populated. See Platforms_Pending for how a new platform is added."),
         ]
         r = 2
         for kind, txt in lines:
@@ -258,7 +258,7 @@ def write_upload_guide(path, upload_map):
             "INVENTORY": ("Days of cover, stockouts, overstock, listing health", "Replenishment is blind; ad waste on out-of-stock SKUs is invisible"),
             "PRICE_PROMO": ("Promo uplift, discount depth, margin after discount", "Cannot tell which discounts earn their cost"),
             "ADS": ("ROAS by campaign, budget caps, wasted spend", "Ad budget is allocated by habit, not return"),
-            "MARKET": ("Category share, competitor ranks, must-stock list", "No view of the category, only of own sales"),
+            "MARKET": ("Segment share, competitor ranks, assortment gaps", "No view of the category, only of own sales"),
             "SERVICE": ("Real lead time, PO confirmation, lost orders by cause", "Planned lead times are used instead of real ones"),
         }
         for k in spec.FEED_ORDER:
@@ -317,9 +317,7 @@ def write_upload_guide(path, upload_map):
         ws = wb.add_worksheet("Platforms_Pending")
         for j, h in enumerate(["Platform", "Type", "Status", "Next step"]):
             ws.write(0, j, h, hdr)
-        pend = [("Breadfast", "Quick commerce", "Awaiting data", "Share the 6 BOOST templates, agree delivery channel, send first Sales and Inventory files"),
-                ("Rabbit", "Quick commerce", "Awaiting data", "Same as above"),
-                ("Jumia", "Marketplace", "Not started", "Confirm vendor portal exports, map to templates")]
+        pend = [("Rabbit", "Quick commerce", "Awaiting data", "Share the 6 BOOST templates, agree delivery channel, send first Sales and Inventory files")]
         for i, row in enumerate(pend, 1):
             for j, v in enumerate(row):
                 ws.write(i, j, v, wrap)

@@ -21,7 +21,9 @@ REGIONS = ["Cairo", "Giza", "Alexandria", "Delta", "Upper Egypt"]
 PLATFORM_FOLDERS = {
     "Talabat Mart": ("TALABAT", "Talabat_Mart"),
     "Noon": ("NOON", "Noon"),
-    "Amazon": ("AMAZON", "Amazon"),
+    "Amazon Core": ("AMAZON", "Amazon_Core"),
+    "Amazon Now": ("AMAZONNOW", "Amazon_Now"),
+    "Breadfast": ("BREADFAST", "Breadfast"),
 }
 
 
@@ -34,7 +36,7 @@ FEEDS = {
     "SALES": dict(
         num="01", title="Sales", grain="day x platform SKU x region", freq="Daily",
         sheets=["Data"], key=["date", "platform_sku_id", "region"],
-        unlocks="Overview, Replenishment, Promo, Must-stock, Ads",
+        unlocks="Overview, Replenishment, Promo, Market Segment Share, Ads",
         delivery="By 08:00 Cairo time, covering the previous day (T+1)",
         tier="Tier 1 (must have)",
         cols=[
@@ -55,7 +57,7 @@ FEEDS = {
     "INVENTORY": dict(
         num="02", title="Inventory", grain="day x platform SKU x node", freq="Daily",
         sheets=["Data"], key=["date", "platform_sku_id", "node_id"],
-        unlocks="Replenishment, Must-stock, Ads (spend on out-of-stock SKUs)",
+        unlocks="Replenishment, Market Segment Share, Ads (spend on out-of-stock SKUs)",
         delivery="By 08:00 Cairo time, end-of-day snapshot of the previous day",
         tier="Tier 1 (must have)",
         cols=[
@@ -122,7 +124,7 @@ FEEDS = {
     "MARKET": dict(
         num="05", title="Market", grain="week x category and week x SKU", freq="Weekly",
         sheets=["Data_Category", "Data_SKUs"], key=["week_start", "platform_sku_id"],
-        unlocks="Overview (share), Must-stock",
+        unlocks="Overview (share), Market Segment Share",
         delivery="Monday 12:00 Cairo time for the previous Monday to Sunday week",
         tier="Tier 3 (nice to have, hardest ask)",
         key_category=["week_start", "category", "sub_category"],
@@ -194,7 +196,7 @@ SETUP_SHEETS = {
         F("status", "text", "", "Y", "Lifecycle status", "ACTIVE", "ACTIVE|PHASING_OUT"),
     ]),
     "Platform_Listings": dict(key=["platform", "sku_code"], cols=[
-        F("platform", "text", "", "Y", "Platform name", "Noon", "Talabat Mart|Noon|Amazon"),
+        F("platform", "text", "", "Y", "Platform name", "Noon", "Talabat Mart|Noon|Amazon Core|Amazon Now|Breadfast"),
         F("sku_code", "text", "", "Y", "Brand SKU code", "SBC-W02"),
         F("platform_sku_id", "text", "", "Y", "Platform's product ID", "N12345678A"),
         F("gtin", "text", "", "Y", "Barcode on the platform listing", "6229000000013"),
@@ -226,6 +228,7 @@ SETUP_SHEETS = {
     ]),
     "Platform_Terms": dict(key=["platform"], cols=[
         F("platform", "text", "", "Y", "Platform name", "Noon"),
+        F("parent_platform", "text", "", "Y", "Platform group when one platform is served through several channels (Amazon Core and Amazon Now share Amazon)", "Amazon"),
         F("channel_type", "text", "", "Y", "Channel type", "Marketplace", "Quick commerce|Marketplace|Vendor central"),
         F("platform_margin_pct", "pct", "fraction", "Y", "Platform's trade margin on net sales ex VAT, 0 to 1", "0.25"),
         F("payment_terms_days", "int", "days", "Y", "Days to payment", "45"),
@@ -235,6 +238,12 @@ SETUP_SHEETS = {
         F("monthly_ad_budget_egp", "num", "EGP", "Y", "Approved monthly ad budget, ex VAT", "54000"),
         F("target_roas", "num", "x", "Y", "Minimum acceptable return on ad spend (attributed sales / spend)", "4.0"),
         F("min_vendor_margin_pct", "pct", "fraction", "Y", "Floor for the brand's margin after discount, 0 to 1", "0.10"),
+    ]),
+    "Shelf_Capacity": dict(key=["platform", "sku_code", "node_id"], cols=[
+        F("platform", "text", "", "Y", "Platform name (quick commerce channels)", "Amazon Now"),
+        F("sku_code", "text", "", "Y", "Brand SKU code", "SBC-02"),
+        F("node_id", "text", "", "Y", "Node ID", "AMN-GIZ"),
+        F("shelf_capacity_units", "int", "units", "Y", "Maximum units the node can hold on shelf for this SKU", "320"),
     ]),
     "Competitor_Brands": dict(key=["brand"], cols=[
         F("brand", "text", "", "Y", "Competitor brand", "Nuvo Baby"),

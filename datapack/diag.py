@@ -26,7 +26,7 @@ for n in ["TLB-GIZ","TLB-CAI-E","TLB-CAI-W","TLB-ALX"]:
 # daily run rate last 14d for S02 Giza
 sl=t["sales"]; r=sl[(sl._s=="SBC-02")&(sl.region=="Giza")&(sl._t>=S.NT-14)]["units_sold"].sum()/14
 print("S02 Giza last-14d run rate/day:",round(r,1))
-am=o["platforms"]["Amazon"]; ia=am["inventory"]; pa=am["psid"][("Amazon","SBC-05")]
+am=o["platforms"]["Amazon Core"]; ia=am["inventory"]; pa=am["psid"][("Amazon Core","SBC-05")]
 x=ia[ia.platform_sku_id==pa]; last=x[x._t==S.NT-1]
 sa=am["sales"]; rr=sa[(sa._s=="SBC-05")&(sa._t>=S.NT-14)]["units_sold"].sum()/14
 print("Amazon S05 last day on_hand",last.on_hand_units_sellable.sum(),"open_po",last.open_po_units.sum(),"unhealthy",last.unhealthy_units.sum(),"run rate/day",round(rr,1),"cover days",round(last.on_hand_units_sellable.sum()/rr))

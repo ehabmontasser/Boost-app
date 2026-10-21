@@ -58,7 +58,7 @@ PRICE_STEP_PCT = 0.06
 # Per-platform SKU price elasticity multipliers (relative to platform elasticity)
 ELAST_MULT = {
     ("Noon", "SBC-05"): 0.6, ("Noon", "SBC-06"): 0.7, ("Noon", "SBC-10"): 0.6,
-    ("Amazon", "SBC-05"): 0.7,
+    ("Amazon Core", "SBC-05"): 0.7,
     ("*", "SBC-11"): 0.5,
     ("Talabat Mart", "SBC-08"): 1.2, ("Talabat Mart", "SBC-09"): 1.2,
 }
@@ -92,7 +92,7 @@ PLAT = {
         mix={"SBC-01": .10, "SBC-02": .20, "SBC-03": .09, "SBC-04": .09, "SBC-05": .06,
              "SBC-06": .07, "SBC-07": .05, "SBC-08": .05, "SBC-09": .08, "SBC-10": .07,
              "SBC-11": .08, "SBC-12": .06}),
-    "Amazon": dict(
+    "Amazon Core": dict(
         code="AMZ", ptype="Vendor central", margin=0.30, pay=60, upo=1.10, elast=1.9,
         units=190, growth=0.005, dow_amp=0.5, payday=1.04, oh=24, cancel_other=0.030,
         ret=0.018, lt=7, review=7, safety=7, moq=180, tcover=28, maxcover=75, confirm=0.93,
@@ -105,8 +105,34 @@ PLAT = {
               "Delta": {"AMZ-ALX1": 0.5, "AMZ-CAI1": 0.5}},
         mix={"SBC-01": .08, "SBC-02": .26, "SBC-03": .14, "SBC-04": .17, "SBC-05": .05,
              "SBC-06": .08, "SBC-10": .10, "SBC-11": .12}),
+    "Amazon Now": dict(
+        code="AMN", ptype="Quick commerce", margin=0.30, pay=60, upo=1.35, elast=2.6,
+        units=110, growth=0.015, dow_amp=1.0, payday=1.10, oh=18, cancel_other=0.020,
+        ret=0.006, lt=2, review=2, safety=2, moq=24, tcover=7, maxcover=14, confirm=0.95,
+        pauses=False, instock_t=0.96, roas_t=4.0, sales_t=380_000, budget=30_000,
+        regions={"Cairo": 0.52, "Giza": 0.27, "Alexandria": 0.21},
+        nodes={"AMN-CAI-N": ("Cairo North dark stores", "Dark store cluster"),
+               "AMN-CAI-S": ("Cairo South dark stores", "Dark store cluster"),
+               "AMN-GIZ": ("Giza dark stores", "Dark store cluster"),
+               "AMN-ALX": ("Alexandria dark stores", "Dark store cluster")},
+        rmap={"Cairo": {"AMN-CAI-N": 0.5, "AMN-CAI-S": 0.5}, "Giza": {"AMN-GIZ": 1.0},
+              "Alexandria": {"AMN-ALX": 1.0}},
+        mix={"SBC-01": .20, "SBC-02": .32, "SBC-06": .12, "SBC-07": .14, "SBC-09": .08, "SBC-11": .14}),
+    "Breadfast": dict(
+        code="BRF", ptype="Quick commerce", margin=0.27, pay=45, upo=1.45, elast=2.8,
+        units=125, growth=0.008, dow_amp=1.0, payday=1.08, oh=18, cancel_other=0.020,
+        ret=0.004, lt=3, review=3, safety=2, moq=36, tcover=10, maxcover=30, confirm=0.97,
+        pauses=False, instock_t=0.96, roas_t=4.0, sales_t=420_000, budget=33_000,
+        regions={"Cairo": 0.55, "Giza": 0.27, "Alexandria": 0.18},
+        nodes={"BRF-CAI": ("Cairo dark stores", "Dark store cluster"),
+               "BRF-GIZ": ("Giza dark stores", "Dark store cluster"),
+               "BRF-ALX": ("Alexandria dark stores", "Dark store cluster")},
+        rmap={"Cairo": {"BRF-CAI": 1.0}, "Giza": {"BRF-GIZ": 1.0}, "Alexandria": {"BRF-ALX": 1.0}},
+        mix={"SBC-01": .16, "SBC-02": .28, "SBC-04": .12, "SBC-06": .10, "SBC-07": .10, "SBC-09": .10, "SBC-11": .14}),
 }
-PLAT_ORDER = ["Talabat Mart", "Noon", "Amazon"]
+PLAT_ORDER = ["Talabat Mart", "Noon", "Amazon Core", "Amazon Now", "Breadfast"]
+PARENT = {"Talabat Mart": "Talabat", "Noon": "Noon", "Amazon Core": "Amazon", "Amazon Now": "Amazon",
+          "Breadfast": "Breadfast"}
 
 # ----------------------------------------------------------------------------
 # Promotions. depth = discount depth, vs = vendor funding share
@@ -139,7 +165,7 @@ PROMOS = {
              windows=[("2026-08-03", "2026-08-16"), ("2026-09-21", "2026-09-30")],
              skus="ALL", depth=0.10, vs=0.0, feat=False),
     ],
-    "Amazon": [
+    "Amazon Core": [
         dict(id="AMZ-LD01", name="Lightning Deal", type="LIGHTNING_DEAL", windows=[("2026-08-12", "2026-08-12")],
              skus=["SBC-02"], depth=0.30, vs=1.0, feat=True),
         dict(id="AMZ-D02", name="Back To School Deals", type="DEAL_EVENT", windows=[("2026-08-20", "2026-09-10")],
@@ -171,7 +197,7 @@ CAMPAIGNS = {
         dict(id="NOON-C04", name="SP | Skin Care", ad_type="Search", obj="Conquest",
              skus=["SBC-10", "SBC-11", "SBC-12"], budget=250, roas=4.0, cpc=1.8, ctr=0.019, capped=0.0),
     ],
-    "Amazon": [
+    "Amazon Core": [
         dict(id="AMZ-C01", name="SP | Auto", ad_type="Search", obj="Conquest",
              skus=["SBC-01", "SBC-02", "SBC-03", "SBC-04", "SBC-05", "SBC-06", "SBC-10", "SBC-11"],
              budget=1000, roas=4.8, cpc=2.8, ctr=0.017, capped=0.0),
@@ -185,11 +211,49 @@ CAMPAIGNS = {
     ],
 }
 
+PROMOS["Amazon Now"] = [
+    dict(id="AMN-D01", name="Weekend Fresh Deals", type="PRICE_OFF", weekend=True,
+         skus=["SBC-01", "SBC-02", "SBC-07"], depth=0.10, vs=0.5, feat=True),
+    dict(id="AMN-D02", name="Back To School Basket", type="DEAL_EVENT", windows=[("2026-09-14", "2026-09-27")],
+         skus=["SBC-01", "SBC-02", "SBC-06"], depth=0.12, vs=1.0, feat=True),
+]
+PROMOS["Breadfast"] = [
+    dict(id="BRF-PR-01", name="Weekly Offers", type="PRICE_OFF", weekend=True,
+         skus=["SBC-02", "SBC-04", "SBC-07"], depth=0.08, vs=0.5, feat=True),
+    dict(id="BRF-PR-02", name="Monthly Bonanza", type="DEAL_EVENT",
+         windows=[("2026-08-01", "2026-08-03"), ("2026-09-01", "2026-09-03"), ("2026-10-01", "2026-10-03")],
+         skus=["SBC-02", "SBC-11"], depth=0.10, vs=0.5, feat=True),
+    dict(id="BRF-PR-03", name="Back To School Basket", type="DEAL_EVENT", windows=[("2026-09-14", "2026-09-27")],
+         skus=["SBC-01", "SBC-02", "SBC-06"], depth=0.12, vs=1.0, feat=True),
+]
+CAMPAIGNS["Amazon Now"] = [
+    dict(id="AMN-C01", name="Now | Sponsored Products", ad_type="Search", obj="Defend",
+         skus=["SBC-02", "SBC-01", "SBC-07"], budget=400, roas=4.4, cpc=2.2, ctr=0.020, capped=0.18),
+    dict(id="AMN-C02", name="Now | Homepage Banner", ad_type="Banner", obj="Awareness",
+         skus=["SBC-02", "SBC-06", "SBC-11"], budget=200, roas=2.0, cpc=0.9, ctr=0.0035, capped=0.0),
+]
+CAMPAIGNS["Breadfast"] = [
+    dict(id="BRF-C01", name="Search | Baby Care", ad_type="Search", obj="Defend",
+         skus=["SBC-02", "SBC-01", "SBC-04"], budget=450, roas=4.6, cpc=2.2, ctr=0.020, capped=0.0),
+    dict(id="BRF-C02", name="Home Banner | Brand", ad_type="Banner", obj="Awareness",
+         skus=["SBC-02", "SBC-06"], budget=300, roas=2.0, cpc=0.9, ctr=0.0035, capped=0.0),
+    dict(id="BRF-C03", name="Category Sponsored | Hygiene", ad_type="Search", obj="Conquest",
+         skus=["SBC-09", "SBC-11", "SBC-07"], budget=200, roas=3.1, cpc=2.2, ctr=0.018, capped=0.0),
+]
+
+# Shelf capacity in cover days per node (quick commerce dark stores have limited shelf space).
+# Enforced in the simulation for the channels below. Amazon Now is tight on the hero SKUs.
+CAP_DAYS = {("Amazon Now", "SBC-02"): 3.0, ("Amazon Now", "SBC-01"): 3.5, ("Amazon Now", "SBC-06"): 5.5,
+            ("Amazon Now", "SBC-07"): 5.5, ("Amazon Now", "SBC-09"): 5.5, ("Amazon Now", "SBC-11"): 7.0,
+            ("Breadfast", "SBC-02"): 4.5}
+CAP_DEFAULT = {"Amazon Now": 5.5, "Breadfast": 7.0}
+SMALL_PACK_CHANNELS = ("Amazon Now", "Breadfast")
+
 # Listing suppression windows (physical stock exists but the SKU cannot be bought)
 SUPPRESSION = {("Talabat Mart", "SBC-09"): ("2026-09-08", "2026-09-28")}
 
 # Initial cover overrides in days
-INIT_COVER = {("Amazon", "SBC-05"): 340, ("Amazon", "SBC-01"): 85, ("Noon", "SBC-09"): 7}
+INIT_COVER = {("Amazon Core", "SBC-05"): 340, ("Amazon Core", "SBC-01"): 85, ("Noon", "SBC-09"): 7}
 
 # Lead time shocks: (platform, sku, node or '*') -> list of (placed_from, placed_to, extra_days)
 LT_SHOCK = {
@@ -200,12 +264,12 @@ LT_SHOCK = {
 # PO confirmation (share of requested units the platform confirms): (platform, sku) -> [(from, to, rate)]
 CONFIRM_SHOCK = {
     ("Noon", "SBC-09"): [("2026-08-25", "2026-10-18", 0.70)],
-    ("Amazon", "SBC-02"): [("2026-07-20", "2026-10-18", 0.88)],
+    ("Amazon Core", "SBC-02"): [("2026-07-20", "2026-10-18", 0.88)],
 }
 # Forced PO events (automatic reorders that should not have happened)
 FORCED_PO = {
-    ("Amazon", "SBC-05", "AMZ-CAI1"): [("2026-10-06", 1500, "2026-10-27")],
-    ("Amazon", "SBC-05", "AMZ-ALX1"): [("2026-10-06", 900, "2026-10-27")],
+    ("Amazon Core", "SBC-05", "AMZ-CAI1"): [("2026-10-06", 1500, "2026-10-27")],
+    ("Amazon Core", "SBC-05", "AMZ-ALX1"): [("2026-10-06", 900, "2026-10-27")],
 }
 
 # ----------------------------------------------------------------------------
@@ -255,21 +319,30 @@ COMP_BRANDS = [
 SUB_MULT = {
     "Talabat Mart": {"Baby": 1.0, "Fresh": 1.4, "Antibacterial": 3.0, "Shampoo": 0.6, "Rash cream": 0.7, "Lotion": 0.5},
     "Noon": {"Baby": 1.0, "Fresh": 0.8, "Antibacterial": 1.0, "Shampoo": 1.0, "Rash cream": 1.0, "Lotion": 1.0},
-    "Amazon": {"Baby": 1.0, "Fresh": 2.2, "Antibacterial": 0.7, "Shampoo": 1.0, "Rash cream": 1.0, "Lotion": 1.0},
+    "Amazon Core": {"Baby": 1.0, "Fresh": 2.2, "Antibacterial": 0.7, "Shampoo": 1.0, "Rash cream": 1.0, "Lotion": 1.0},
 }
 TARGET_SHARE = {
     ("Talabat Mart", "Wipes"): 0.21, ("Talabat Mart", "Skin Care"): 0.09,
     ("Noon", "Wipes"): 0.11, ("Noon", "Skin Care"): 0.10,
-    ("Amazon", "Wipes"): 0.12, ("Amazon", "Skin Care"): 0.125,
+    ("Amazon Core", "Wipes"): 0.12, ("Amazon Core", "Skin Care"): 0.125,
 }
-CAT_GROWTH = {"Talabat Mart": 0.022, "Noon": 0.010, "Amazon": 0.015}
+CAT_GROWTH = {"Talabat Mart": 0.022, "Noon": 0.010, "Amazon Core": 0.015}
 NAMED_SHARE_OF_POOL = 0.72
+SUB_MULT["Amazon Now"] = {"Baby": 1.0, "Fresh": 1.3, "Antibacterial": 1.8, "Shampoo": 0.5, "Rash cream": 0.7, "Lotion": 0.4}
+SUB_MULT["Breadfast"] = {"Baby": 1.0, "Fresh": 1.6, "Antibacterial": 2.0, "Shampoo": 0.5, "Rash cream": 0.6, "Lotion": 0.4}
+TARGET_SHARE.update({("Amazon Now", "Wipes"): 0.13, ("Amazon Now", "Skin Care"): 0.10,
+                     ("Breadfast", "Wipes"): 0.15, ("Breadfast", "Skin Care"): 0.08})
+CAT_GROWTH.update({"Amazon Now": 0.020, "Breadfast": 0.018})
 
 
 def dow_factors(amp):
     base = np.array([0.96, 0.94, 0.97, 1.06, 1.12, 1.04, 0.91])
     f = 1 + (base - 1) * amp
     return f / f.mean()
+
+
+import zlib
+def hash_(k): return zlib.crc32(("amn" + k).encode())
 
 
 def build(seed=SEED):
@@ -286,8 +359,12 @@ def build(seed=SEED):
                 psid[(P, k)] = "TLB-" + "".join(idrng.choice(list("0123456789"), 6))
             elif P == "Noon":
                 psid[(P, k)] = "N" + "".join(idrng.choice(list("0123456789"), 8)) + "A"
-            else:
+            elif P == "Amazon Core":
                 psid[(P, k)] = "B0" + "".join(idrng.choice(alnum, 8))
+            elif P == "Amazon Now":
+                psid[(P, k)] = psid.get(("Amazon Core", k)) or "B0" + "".join(np.random.default_rng(abs(hash_(k))).choice(alnum, 8))
+            else:
+                psid[(P, k)] = "BRF-" + "".join(idrng.choice(list("0123456789"), 5))
 
     # ---- Price path ------------------------------------------------------------
     step_t = idx(PRICE_STEP)
@@ -297,6 +374,7 @@ def build(seed=SEED):
         for t in range(NT):
             LP[t, SKU[k]["idx"]] = round(p / (1 + PRICE_STEP_PCT), 2) if t < step_t else p
 
+    caps = {}
     out = {"platforms": {}, "diag": {}}
     all_sales = {}
 
@@ -399,9 +477,14 @@ def build(seed=SEED):
             case = SKU[s]["case"]
             lt, review, safety, moq = cfg["lt"], cfg["review"], cfg["safety"], cfg["moq"]
             mu0 = max(1.0, sum(Dp[r][:14].mean() for r in regs_n))
+            capd = CAP_DAYS.get((P, s), CAP_DEFAULT.get(P))
+            cap = max(2 * case, int(math.ceil(capd * mu0 / case)) * case) if capd else None
+            caps[(P, s, n)] = cap
             on_hand = int(round(INIT_COVER.get((P, s), cfg["tcover"]) * mu0))
+            if cap:
+                on_hand = min(on_hand, cap)
             pipe = []   # dict(arr, qty, placed, lt)
-            phase = zlib.crc32(f"{P}{s}{n}".encode()) % review
+            phase = zlib.crc32(f"{P.replace('Amazon Core','Amazon')}{s}{n}".encode()) % review
             hist = []
             forced = {idx(a): (q, idx(e)) for a, q, e in FORCED_PO.get((P, s, n), [])}
             for t in range(NT):
@@ -441,7 +524,13 @@ def build(seed=SEED):
                 if (t - phase) % review == 0 and not is_supp:
                     pos = on_hand + sum(p["qty"] for p in pipe)
                     qty = max(0.0, fc * (lt + review + safety) - pos)
-                    if qty > 0:
+                    if cap:
+                        lim = max(0.0, cap + fc * lt - pos)
+                        qty = min(qty, lim)
+                        qty = round(qty / case) * case
+                        if qty == 0 and pos < fc * (lt + review):
+                            qty = case
+                    elif qty > 0:
                         qty = math.ceil(qty / case) * case
                         if qty < moq:
                             qty = moq if pos < fc * (lt + review) else 0
@@ -451,6 +540,8 @@ def build(seed=SEED):
                             if idx(a) <= t <= idx(b):
                                 cr = rate
                         conf = int(qty * float(np.clip(rng.normal(cr, 0.02), 0.5, 1.0)) // case * case)
+                        if cap and conf == 0 and cr >= 0.9:
+                            conf = int(qty // case * case)      # a one-case PO is confirmed in full
                         extra = 0
                         for key in ((P, s, n), (P, s, "*")):
                             for a, b, ex in LT_SHOCK.get(key, []):
@@ -614,8 +705,12 @@ def build(seed=SEED):
                 comp_ids[(P, i)] = "TLB-" + "".join(mrng.choice(list("0123456789"), 6))
             elif P == "Noon":
                 comp_ids[(P, i)] = "N" + "".join(mrng.choice(list("0123456789"), 8)) + "A"
-            else:
+            elif P == "Amazon Core":
                 comp_ids[(P, i)] = "B0" + "".join(mrng.choice(alnum, 8))
+            elif P == "Amazon Now":
+                comp_ids[(P, i)] = comp_ids.get(("Amazon Core", i)) or "B0" + "".join(np.random.default_rng(hash_(str(i))).choice(alnum, 8))
+            else:
+                comp_ids[(P, i)] = "BRF-" + "".join(mrng.choice(list("0123456789"), 5))
     comp_gtin = [ean13("6221" + f"{i + 1:08d}") for i in range(len(COMP))]
     for P in PLAT_ORDER:
         d = out["platforms"][P]
@@ -628,7 +723,7 @@ def build(seed=SEED):
         for cat in ["Wipes", "Skin Care"]:
             sp_cat = wk_sku[wk_sku["_s"].map(lambda x: SKU[x]["cat"] == cat)].groupby("_w")["gmv"].sum()
             c0 = float(sp_cat.iloc[0]) / TARGET_SHARE[(P, cat)]
-            comps = [(i, c) for i, c in enumerate(COMP) if c[2] == cat]
+            comps = [(i, c) for i, c in enumerate(COMP) if c[2] == cat and not (P in SMALL_PACK_CHANNELS and ("3x" in c[1] or "500ml" in c[1]))]
             for w in range(len(WEEKS)):
                 total = c0 * (1 + CAT_GROWTH[P]) ** w * mrng.lognormal(0, 0.015)
                 sprout = float(sp_cat.get(w, 0.0))
@@ -707,10 +802,21 @@ def build(seed=SEED):
         safety_stock_days=PLAT[P]["safety"], target_cover_days=PLAT[P]["tcover"], max_cover_days=PLAT[P]["maxcover"],
         moq_units_per_node=PLAT[P]["moq"]) for P in PLAT_ORDER for s in out["platforms"][P]["skus"]])
     setup["Platform_Terms"] = pd.DataFrame([dict(
-        platform=P, channel_type=PLAT[P]["ptype"], platform_margin_pct=PLAT[P]["margin"],
-        payment_terms_days=PLAT[P]["pay"], vat_rate=0.14, target_in_stock_rate_pct=PLAT[P]["instock_t"],
+        platform=P, parent_platform=PARENT[P], channel_type=PLAT[P]["ptype"], platform_margin_pct=PLAT[P]["margin"], payment_terms_days=PLAT[P]["pay"], vat_rate=0.14, target_in_stock_rate_pct=PLAT[P]["instock_t"],
         monthly_sales_target_egp=float(PLAT[P]["sales_t"]), monthly_ad_budget_egp=float(PLAT[P]["budget"]),
         target_roas=PLAT[P]["roas_t"], min_vendor_margin_pct=0.10) for P in PLAT_ORDER])
+    cap_rows = []
+    for P in PLAT_ORDER:
+        if PLAT[P]["ptype"] != "Quick commerce":
+            continue
+        d = out["platforms"][P]; inv_ = d["inventory"]; rv = {v: k for (pp, k), v in d["psid"].items() if pp == P}
+        mx = inv_.groupby(["platform_sku_id", "node_id"])["on_hand_units_sellable"].max()
+        for (pid, n), v in mx.items():
+            sk = rv[pid]; c_ = caps.get((P, sk, n))
+            if not c_:
+                c_ = int(math.ceil(v * 1.15 / SKU[sk]["case"])) * SKU[sk]["case"]   # not binding: sized above observed peak
+            cap_rows.append(dict(platform=P, sku_code=sk, node_id=n, shelf_capacity_units=int(c_)))
+    setup["Shelf_Capacity"] = pd.DataFrame(cap_rows)
     setup["Competitor_Brands"] = pd.DataFrame([dict(brand=b, tier=t, focus=f) for b, t, f in COMP_BRANDS])
     out["setup"] = setup
     return out
