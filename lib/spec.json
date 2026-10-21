@@ -1,0 +1,1046 @@
+{
+ "template_version": "v1.0",
+ "platforms": {
+  "Talabat Mart": {
+   "code": "TALABAT",
+   "folder": "Talabat_Mart"
+  },
+  "Noon": {
+   "code": "NOON",
+   "folder": "Noon"
+  },
+  "Amazon Core": {
+   "code": "AMAZON",
+   "folder": "Amazon_Core"
+  },
+  "Amazon Now": {
+   "code": "AMAZONNOW",
+   "folder": "Amazon_Now"
+  },
+  "Breadfast": {
+   "code": "BREADFAST",
+   "folder": "Breadfast"
+  }
+ },
+ "feed_order": [
+  "SALES",
+  "INVENTORY",
+  "PRICE_PROMO",
+  "ADS",
+  "MARKET",
+  "SERVICE"
+ ],
+ "feeds": {
+  "SALES": {
+   "num": "01",
+   "title": "Sales",
+   "freq": "Daily",
+   "key": [
+    "date",
+    "platform_sku_id",
+    "region"
+   ],
+   "cols": [
+    {
+     "name": "date",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "region",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Cairo|Giza|Alexandria|Delta|Upper Egypt"
+    },
+    {
+     "name": "orders",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "units_sold",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gross_gmv_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "discount_value_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "net_gmv_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "vendor_funded_discount_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "cancelled_units_oos",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "cancelled_units_other",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "returned_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "INVENTORY": {
+   "num": "02",
+   "title": "Inventory",
+   "freq": "Daily",
+   "key": [
+    "date",
+    "platform_sku_id",
+    "node_id"
+   ],
+   "cols": [
+    {
+     "name": "date",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "listing_status",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "ACTIVE|SUPPRESSED|DELISTED"
+    },
+    {
+     "name": "on_hand_units_sellable",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "in_transit_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "open_po_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "next_po_eta_date",
+     "dtype": "date",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "unhealthy_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "oos_hours",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "operating_hours",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "in_stock_rate_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "unfilled_demand_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "PRICE_PROMO": {
+   "num": "03",
+   "title": "Price and Promo",
+   "freq": "Daily",
+   "key": [
+    "date",
+    "platform_sku_id"
+   ],
+   "cols": [
+    {
+     "name": "date",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "list_price_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "selling_price_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "discount_depth_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "promo_id",
+     "dtype": "text",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "promo_name",
+     "dtype": "text",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "promo_type",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "NONE|PRICE_OFF|BUNDLE|COUPON|DEAL_EVENT|LIGHTNING_DEAL"
+    },
+    {
+     "name": "funding",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "NONE|VENDOR|PLATFORM|SHARED"
+    },
+    {
+     "name": "vendor_funding_share_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "promo_start_date",
+     "dtype": "date",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "promo_end_date",
+     "dtype": "date",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "featured_placement",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Y|N"
+    }
+   ]
+  },
+  "ADS": {
+   "num": "04",
+   "title": "Ads",
+   "freq": "Daily",
+   "key": [
+    "date",
+    "campaign_id",
+    "platform_sku_id"
+   ],
+   "cols": [
+    {
+     "name": "date",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "campaign_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "campaign_name",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "ad_type",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Search|Display|Banner|Sponsored Brands"
+    },
+    {
+     "name": "objective",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Defend|Conquest|Awareness|Retarget"
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "impressions",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "clicks",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "ad_spend_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "attributed_orders_7d",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "attributed_units_7d",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "attributed_sales_7d_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "daily_budget_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "impression_share_lost_budget_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "MARKET": {
+   "num": "05",
+   "title": "Market",
+   "freq": "Weekly",
+   "key": [
+    "week_start",
+    "platform_sku_id"
+   ],
+   "cols": [
+    {
+     "name": "week_start",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Wipes|Skin Care"
+    },
+    {
+     "name": "sub_category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Baby|Fresh|Antibacterial|Shampoo|Rash cream|Lotion"
+    },
+    {
+     "name": "brand",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "product_name",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "is_own_brand",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Y|N"
+    },
+    {
+     "name": "units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gmv_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "avg_price_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "rank_by_value",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "in_stock_rate_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "share_of_search_pct",
+     "dtype": "pct",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "avg_rating",
+     "dtype": "num",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "review_count",
+     "dtype": "int",
+     "required": "N",
+     "allowed": ""
+    }
+   ],
+   "cols_category": [
+    {
+     "name": "week_start",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Wipes|Skin Care"
+    },
+    {
+     "name": "sub_category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Baby|Fresh|Antibacterial|Shampoo|Rash cream|Lotion"
+    },
+    {
+     "name": "category_gmv_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "category_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "active_brands",
+     "dtype": "int",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "active_skus",
+     "dtype": "int",
+     "required": "N",
+     "allowed": ""
+    }
+   ],
+   "key_category": [
+    "week_start",
+    "category",
+    "sub_category"
+   ]
+  },
+  "SERVICE": {
+   "num": "06",
+   "title": "Service",
+   "freq": "Weekly",
+   "key": [
+    "week_start",
+    "platform_sku_id"
+   ],
+   "cols": [
+    {
+     "name": "week_start",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "customer_orders",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "fully_filled_orders_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "lost_orders_oos",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "lost_orders_other",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "return_rate_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "po_units_requested",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "po_units_confirmed",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "po_units_received",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "avg_lead_time_days",
+     "dtype": "num",
+     "required": "N",
+     "allowed": ""
+    },
+    {
+     "name": "on_time_receipt_pct",
+     "dtype": "pct",
+     "required": "N",
+     "allowed": ""
+    }
+   ]
+  }
+ },
+ "setup": {
+  "SKU_Master": {
+   "key": [
+    "sku_code"
+   ],
+   "cols": [
+    {
+     "name": "sku_code",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "product_name",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "brand",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Wipes|Skin Care"
+    },
+    {
+     "name": "sub_category",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Baby|Fresh|Antibacterial|Shampoo|Rash cream|Lotion"
+    },
+    {
+     "name": "pack_size",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "list_price_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "unit_cogs_ex_vat_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "shelf_life_months",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "case_pack_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "status",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "ACTIVE|PHASING_OUT"
+    }
+   ]
+  },
+  "Platform_Listings": {
+   "key": [
+    "platform",
+    "sku_code"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Talabat Mart|Noon|Amazon Core|Amazon Now|Breadfast"
+    },
+    {
+     "name": "sku_code",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_sku_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "gtin",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "platform_title",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "listed_since",
+     "dtype": "date",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Nodes": {
+   "key": [
+    "platform",
+    "node_id"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_name",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_type",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Dark store cluster|Fulfilment centre"
+    },
+    {
+     "name": "operating_hours",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Region_Node_Map": {
+   "key": [
+    "platform",
+    "region",
+    "node_id"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "region",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "share_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Replenishment_Params": {
+   "key": [
+    "platform",
+    "sku_code"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "sku_code",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "planned_lead_time_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "review_cycle_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "safety_stock_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "target_cover_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "max_cover_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "moq_units_per_node",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Platform_Terms": {
+   "key": [
+    "platform"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "parent_platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "channel_type",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Quick commerce|Marketplace|Vendor central"
+    },
+    {
+     "name": "platform_margin_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "payment_terms_days",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "vat_rate",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "target_in_stock_rate_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "monthly_sales_target_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "monthly_ad_budget_egp",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "target_roas",
+     "dtype": "num",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "min_vendor_margin_pct",
+     "dtype": "pct",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Shelf_Capacity": {
+   "key": [
+    "platform",
+    "sku_code",
+    "node_id"
+   ],
+   "cols": [
+    {
+     "name": "platform",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "sku_code",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "node_id",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "shelf_capacity_units",
+     "dtype": "int",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  },
+  "Competitor_Brands": {
+   "key": [
+    "brand"
+   ],
+   "cols": [
+    {
+     "name": "brand",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    },
+    {
+     "name": "tier",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": "Leader|Challenger|Niche"
+    },
+    {
+     "name": "focus",
+     "dtype": "text",
+     "required": "Y",
+     "allowed": ""
+    }
+   ]
+  }
+ }
+}

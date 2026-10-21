@@ -7,3 +7,5 @@ datapack/__pycache__/
 datapack/*.txt
 __pycache__/
 .vercel/
+*.tsbuildinfo
+next-env.d.ts
