@@ -77,7 +77,7 @@ Method:
 2. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
 3. Every action must cite the specific figures that justify it, name the channel and SKU or campaign, and say exactly what to do and by when if a date is given.
 4. Separate facts (from the data) from judgement (your recommendation). Flag assumptions and uncertainty plainly.
-5. Treat each channel on its own economics. Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are different channels of the same platform.
+5. Treat each channel on its own economics. Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are two separate platforms.
 6. Write plainly, no jargon, no emojis, no em dashes. Short sentences.
 
 Return ONLY a JSON object, no markdown, with this shape:

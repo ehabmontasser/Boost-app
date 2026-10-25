@@ -65,7 +65,7 @@ export default async function Replenishment() {
               <tr key={x.code}><td><b>{x.name}</b></td><td className="r">{egp(x.lostValue)}</td><td className={"r " + (x.lostPct > 0.03 ? "bad" : "")}>{pct(x.lostPct)}</td></tr>
             ))}</tbody>
           </table></div>
-          <div className="muted">Amazon Core and Amazon Now are one platform with two channels. Dark stores hold less shelf stock, so they run out more often.</div>
+          <div className="muted">Amazon Core (e-commerce) and Amazon Now (quick commerce) are two separate platforms. Dark stores hold less shelf stock, so they run out more often.</div>
         </section>
       </div>
       <div className="row">
