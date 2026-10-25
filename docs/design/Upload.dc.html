@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BOOST admin upload center</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit;text-decoration:none}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;min-height:1000px;background:#F2F4F6;font-family:Inter,system-ui,sans-serif;color:#101923">
+  <nav aria-label="Main" style="flex:0 0 240px;width:240px;background:#101923;color:#fff;box-sizing:border-box;padding:24px 16px;display:flex;flex-direction:column;gap:28px">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 8px">
+      <div style="width:32px;height:32px;border-radius:8px;background:#C6F432;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 17 L9 10 L13 13 L19 4" fill="none" stroke="#101923" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:0.04em">BOOST</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:500">
+      <div style="padding:6px 12px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#8896A4">Admin</div>
+      <a href="Upload.dc.html" style="display:block;padding:12px;border-radius:10px;background:#1E2B38;color:#C6F432">Upload center</a>
+      <a href="Upload.dc.html" style="display:block;padding:12px;border-radius:10px;color:#D7DEE5">Ingestion log</a>
+      <a href="Upload.dc.html" style="display:block;padding:12px;border-radius:10px;color:#D7DEE5">SKU mapping queue</a>
+      <a href="Overview.dc.html" style="display:block;padding:12px;border-radius:10px;color:#D7DEE5">Back to brand view</a>
+    </div>
+    <div style="margin-top:auto;padding:0 8px;font-size:13px;color:#B8C2CC">Account manager · Sprout Baby Care</div>
+  </nav>
+
+  <main style="flex:999 1 560px;min-width:0;box-sizing:border-box;padding:32px 40px;display:flex;flex-direction:column;gap:24px">
+    <header>
+      <h1 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:32px">Upload center</h1>
+      <div style="font-size:14px;color:#66717E;margin-top:4px">Folder is the platform tab, file prefix is the card. Wrong-slot files are rejected.</div>
+    </header>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap" role="tablist" aria-label="Platform">
+      <span role="tab" aria-selected="false" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#fff;border:1px solid #DDE2E7;font-size:14px;font-weight:500">Brand Master</span>
+      <span role="tab" aria-selected="false" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#fff;border:1px solid #DDE2E7;font-size:14px;font-weight:500">Talabat Mart</span>
+      <span role="tab" aria-selected="true" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#101923;color:#fff;font-size:14px;font-weight:600">Amazon Now</span>
+      <span role="tab" aria-selected="false" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#fff;border:1px solid #DDE2E7;font-size:14px;font-weight:500">Amazon Core</span>
+      <span role="tab" aria-selected="false" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#fff;border:1px solid #DDE2E7;font-size:14px;font-weight:500">Noon</span>
+      <span role="tab" aria-selected="false" style="padding:0 16px;height:44px;display:flex;align-items:center;border-radius:10px;background:#fff;border:1px solid #DDE2E7;font-size:14px;font-weight:500">Breadfast</span>
+    </div>
+
+    <section style="background:#fff;border:1px solid #DDE2E7;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
+      <h2 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Amazon Now · six cards</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">01 Sales</b><span style="background:#E3F4F1;color:#065B50;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Through 18 Oct</span></div><div style="font-size:13px;color:#66717E">Daily · AMAZONNOW_01_SALES_...xlsx</div><div style="font-size:13px">Last import: 19 Oct</div></div>
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">02 Inventory</b><span style="background:#E3F4F1;color:#065B50;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Through 18 Oct</span></div><div style="font-size:13px;color:#66717E">Daily · AMAZONNOW_02_INVENTORY_...xlsx</div><div style="font-size:13px">Last import: 19 Oct</div></div>
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">03 Price and promo</b><span style="background:#FCEBD3;color:#7A4000;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Through 11 Oct</span></div><div style="font-size:13px;color:#66717E">Daily · AMAZONNOW_03_PRICE_PROMO_...xlsx</div><div style="font-size:13px">Waiting for week of 12 to 18 Oct</div></div>
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">04 Ads</b><span style="background:#E3F4F1;color:#065B50;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Through 18 Oct</span></div><div style="font-size:13px;color:#66717E">Daily · AMAZONNOW_04_ADS_...xlsx</div><div style="font-size:13px">Last import: 19 Oct</div></div>
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">05 Market</b><span style="background:#E3F4F1;color:#065B50;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Week of 12 Oct</span></div><div style="font-size:13px;color:#66717E">Weekly · AMAZONNOW_05_MARKET_...xlsx</div><div style="font-size:13px">Last import: 19 Oct</div></div>
+        <div style="border:1px solid #DDE2E7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">06 Service</b><span style="background:#E3F4F1;color:#065B50;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600">Week of 12 Oct</span></div><div style="font-size:13px;color:#66717E">Weekly · AMAZONNOW_06_SERVICE_...xlsx</div><div style="font-size:13px">Last import: 19 Oct</div></div>
+      </div>
+    </section>
+
+    <div style="display:flex;flex-wrap:wrap;gap:24px">
+      <section style="flex:1 1 420px;min-width:0;background:#fff;border:2px dashed #8896A4;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+        <h2 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Drop the 03 Price and promo file</h2>
+        <div style="font-size:14px;color:#3B4856;line-height:1.5">Slot: Admin > Upload Center > Amazon Now > 03 Price and promo. The importer checks the Meta tab for template, platform and period before it reads any row.</div>
+        <button style="background:#101923;color:#fff;border:0;border-radius:10px;padding:0 18px;height:44px;font:600 14px Inter,sans-serif">Choose file</button>
+      </section>
+      <section style="flex:1 1 420px;min-width:0;background:#fff;border:1px solid #DDE2E7;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:12px">
+        <h2 style="margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px">Validation result</h2>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#FBE3E1;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.5;color:#8C1D17"><b>Rejected.</b> This file is a Noon Sales file (NOON, BOOST-SALES-v1.0). It cannot go in Amazon Now > 03 Price and promo.</div>
+        <div style="display:flex;gap:10px;align-items:flex-start;background:#E3F4F1;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.5;color:#065B50"><b>Imported.</b> AMAZONNOW_03_PRICE_PROMO_20261012_20261018.xlsx: rows replaced by key, 0 blocking errors, 0 warnings.</div>
+        <div style="font-size:13px;color:#66717E">Warnings import the file and appear in the ingestion log. Unknown SKU IDs go to the mapping queue.</div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
