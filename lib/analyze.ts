@@ -86,6 +86,29 @@ Return ONLY a JSON object, no markdown, with this shape:
  "watch": ["risks, data gaps or things to monitor"] }
 Give 3 to 5 actions and at most 3 watch items.`;
 
+// Structured output: the API guarantees the reply matches this shape.
+const SCHEMA = {
+  type: "object",
+  properties: {
+    headline: { type: "string" },
+    actions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { title: { type: "string" }, why: { type: "string" }, do: { type: "string" }, impact: { type: "string" } },
+        required: ["title", "why", "do", "impact"],
+        additionalProperties: false,
+      },
+    },
+    watch: { type: "array", items: { type: "string" } },
+  },
+  required: ["headline", "actions", "watch"],
+  additionalProperties: false,
+};
+
+// Bump when the prompt or request settings change, so saved results from older settings are not reused.
+const PROMPT_VERSION = "2";
+
 function parseInsight(text: string): Insight | null {
   const a = text.indexOf("{"), b = text.lastIndexOf("}");
   if (a < 0 || b <= a) return null;
@@ -105,7 +128,7 @@ export async function analyze(module: ModuleName, force = false): Promise<Analys
   const p = await payload(module);
   if (!p) return { ok: false, error: "No data to analyse yet. Upload the Brand Master and the platform files first." };
   const body = JSON.stringify(p.data);
-  const hash = createHash("sha256").update(module + model + body).digest("hex");
+  const hash = createHash("sha256").update(PROMPT_VERSION + module + model + body).digest("hex");
   if (!force) {
     const hit = await q<{ result: any }>("SELECT result FROM analysis_cache WHERE brand_id = $1 AND module = $2 AND scope = 'all' AND data_hash = $3", [p.brandId, module, hash]);
     if (hit[0]) {
@@ -121,20 +144,31 @@ export async function analyze(module: ModuleName, force = false): Promise<Analys
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", signal: ctrl.signal,
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      headers: {
+        "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01",
+        // On a safety decline the API retries the same request on a fallback model it picks.
+        "anthropic-beta": "server-side-fallback-2026-07-01",
+      },
       body: JSON.stringify({
-        model, max_tokens: 1800, system: SYSTEM,
+        // Thinking is on by default and counts toward max_tokens, so leave room for it.
+        model, max_tokens: 16000, system: SYSTEM,
+        output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
+        fallbacks: "default",
         messages: [{ role: "user", content: `Module: ${module}\nFigures (JSON):\n${body}` }],
       }),
     });
     const j: any = await resp.json().catch(() => ({}));
     if (!resp.ok) return { ok: false, error: `Claude API error ${resp.status}: ${j?.error?.message ?? "request failed"}` };
+    if (j.stop_reason === "max_tokens") return { ok: false, error: "Claude's answer was cut off before it finished. Try again." };
+    if (j.stop_reason === "refusal") return { ok: false, error: "Claude declined to analyse this page. Try again later." };
     text = (j.content ?? []).filter((x: any) => x.type === "text").map((x: any) => x.text).join("");
   } catch (e) {
     return { ok: false, error: (e as Error).name === "AbortError" ? "Claude took too long to answer. Try again." : `Could not reach the Claude API: ${(e as Error).message}` };
   } finally { clearTimeout(timer); }
   const insight = parseInsight(text);
-  const result = insight ? { insight } : { insight: null, raw: text };
+  // Only save good results, so a bad answer is not served again from the cache.
+  if (!insight) return { ok: true, insight: null, raw: text, cached: false, model };
+  const result = { insight };
   try {
     await q(
       `INSERT INTO analysis_cache (brand_id, module, scope, data_hash, result, model) VALUES ($1,$2,'all',$3,$4::jsonb,$5)
