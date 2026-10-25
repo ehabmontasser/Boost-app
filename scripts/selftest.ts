@@ -1,7 +1,7 @@
 // Dry run: parses and validates every file of the data pack with the app's own importer code (no database).
 // Usage: npx tsx scripts/selftest.ts [packDir]
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { readWorkbook } from "../lib/xlsx";
 import { parseFeedFile, parseSetupFile } from "../lib/validate";
 import spec from "../lib/spec.json";
@@ -19,7 +19,7 @@ function walk(dir: string): string[] {
 let bad = 0, files = 0, rows = 0;
 const perFeed: Record<string, number> = {};
 for (const f of walk(pack).sort()) {
-  const base = f.split("/").pop()!.replace(".xlsx", "");
+  const base = basename(f, ".xlsx");
   if (base.startsWith("00_Upload_Guide")) continue;
   const sheets = readWorkbook(readFileSync(f));
   files++;

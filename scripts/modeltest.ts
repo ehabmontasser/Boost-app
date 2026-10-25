@@ -2,7 +2,7 @@
 // then runs the app's queries and module models. Usage: npx tsx scripts/modeltest.ts
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { readWorkbook } from "../lib/xlsx";
 import { parseFeedFile, parseSetupFile, toDbRows } from "../lib/validate";
 import { FEED_TABLES, MARKET_CATEGORY, SETUP_TABLES, TableMap, platformCode } from "../lib/mapping";
@@ -45,7 +45,7 @@ function walk(dir: string): string[] {
 }
 const codeToPlatform = Object.fromEntries(Object.entries(spec.platforms).map(([name, v]) => [v.code, name]));
 for (const f of walk(pack).sort()) {
-  const base = f.split("/").pop()!.replace(".xlsx", "");
+  const base = basename(f, ".xlsx");
   if (base.startsWith("00_Upload_Guide")) continue;
   const sheets = readWorkbook(readFileSync(f));
   if (base.startsWith("SETUP_")) {
