@@ -76,7 +76,7 @@ export default async function Market() {
           <div className="muted">Quick-commerce channels carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
         </section>
       </div>
-      <AnalyzeButton module="market" title="Claude recommends: segment share" />
+      <AnalyzeButton module="market" canRefresh={s.role === "admin"} title="Claude recommends: segment share" />
     </>
   );
 }

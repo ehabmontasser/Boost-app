@@ -43,7 +43,7 @@ export default async function Promotions() {
         </div>
         {best ? <div className="muted">Best: {best.name}, {best.promo}, {egp(best.effect, false)}. Deep discounts paid fully by the brand lift volume but cost more than the extra units earn. Shared or platform-funded deals pay.</div> : null}
       </section>
-      <AnalyzeButton module="promotions" title="Claude recommends: promotions and discounts" />
+      <AnalyzeButton module="promotions" canRefresh={s.role === "admin"} title="Claude recommends: promotions and discounts" />
     </>
   );
 }

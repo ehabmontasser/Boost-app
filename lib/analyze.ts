@@ -24,19 +24,20 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       const m = await overviewModel(c);
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, currency: "EGP ex VAT",
+        note: "wipesSegmentShare = Sprout's share of all wipes sales on that platform, all brands included (a fraction, 0.188 = 18.8%). It is market share, not a share of Sprout's own sales.",
         totals: { netSales: r(m.totalNet), adSpend: r(m.totalSpend), adSpendPct: r(m.spendPct, 3), lostDemand: r(m.totalLost), lostDemandPct: r(m.lostPct, 3) },
-        channels: m.rows.map((x) => ({ channel: x.name, type: x.channel, netSales: r(x.net), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesShareFirstWeek: x.wipesFirst === null ? null : r(x.wipesFirst, 3), wipesShareLatest: x.wipesLast === null ? null : r(x.wipesLast, 3) })),
+        channels: m.rows.map((x) => ({ channel: x.name, type: x.channel, netSales: r(x.net), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareFirstWeek: x.wipesFirst === null ? null : r(x.wipesFirst, 3), wipesSegmentShareLatest: x.wipesLast === null ? null : r(x.wipesLast, 3) })),
       } };
     }
     case "replenishment": {
       const m = await replenishmentModel(c);
       if (!m) return null;
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, note: "cover = on hand / average daily units of the last 14 days. gapDays = days a node is expected to be empty before the next PO lands.",
+        brand: c.brandName, asOf, currency: "EGP ex VAT", note: "cover = on hand / average daily units of the last 14 days. gapDays = days a node is expected to be empty before the next PO lands. Lost demand covers all loaded data, 13 weeks up to asOf.",
         atRisk: m.atRisk.slice(0, 10).map((x) => ({ channel: x.platformName, node: x.nodeName, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover, 1), nextPoEta: x.eta, gapDays: r(x.gapDays, 1), unitsAtRisk: r(x.unitsAtRisk) })),
         overstock: m.overstock.slice(0, 5).map((x) => ({ channel: x.name, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover), openPoUnits: x.openPo, nextPoEta: x.eta, maxCoverDays: x.maxCover })),
-        lostDemandByChannel: m.channel.map((x) => ({ channel: x.name, lostDemand: r(x.lostValue), lostPctOfSales: r(x.lostPct, 3) })),
-        topLostSkus: m.lostTop.slice(0, 6).map((x) => ({ channel: x.name, sku: x.skuName, lostDemand: r(x.value), inStockRate: r(x.inStock, 3) })),
+        lostDemandByChannel: m.channel.map((x) => ({ channel: x.name, lostDemandEgp: r(x.lostValue), lostPctOfSales: r(x.lostPct, 3) })),
+        topLostSkus: m.lostTop.slice(0, 6).map((x) => ({ channel: x.name, sku: x.skuName, lostDemandEgp: r(x.value), inStockRate: r(x.inStock, 3) })),
         lowestPoConfirmation: m.lowestConfirm.map((x) => ({ channel: x.name, sku: x.skuName, confirmRate: r(x.confirmRate ?? 0, 2), avgLeadTimeDays: r(x.lead, 1) })),
       } };
     }
@@ -61,8 +62,9 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       const m = await marketModel(c);
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, latestWeek: m.latestWeek,
-        wipesShare: m.wipes.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
-        skinCareShare: m.skin.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
+        note: "Segment share = Sprout's share of all sales in that category on that platform, all brands included (a fraction, 0.188 = 18.8%).",
+        wipesSegmentShare: m.wipes.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
+        skinCareSegmentShare: m.skin.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
         topWipesSkus: Object.fromEntries(Object.entries(m.top).map(([k, v]) => [c.nameOf(k), v.slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, subCategory: x.sub, own: x.own }))])),
         brandSkusNotListed: m.gaps.map((g) => ({ channel: g.name, missing: g.missing })),
       } };

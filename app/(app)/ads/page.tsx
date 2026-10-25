@@ -56,7 +56,7 @@ export default async function Ads() {
           <div className="muted">Spend on days when the listing was suppressed on the platform. It buys nothing, so pause the campaign until the listing is back.</div>
         </section>
       ) : null}
-      <AnalyzeButton module="ads" title="Claude recommends: ads budget" />
+      <AnalyzeButton module="ads" canRefresh={s.role === "admin"} title="Claude recommends: ads budget" />
     </>
   );
 }

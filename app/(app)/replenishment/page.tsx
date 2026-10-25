@@ -88,7 +88,7 @@ export default async function Replenishment() {
           </table></div>
         </section>
       </div>
-      <AnalyzeButton module="replenishment" title="Claude recommends: stock" />
+      <AnalyzeButton module="replenishment" canRefresh={s.role === "admin"} title="Claude recommends: stock" />
     </>
   );
 }

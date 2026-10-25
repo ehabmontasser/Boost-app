@@ -57,7 +57,7 @@ export default async function Overview() {
         </div>
         <div className="muted">Go deeper: <Link href="/replenishment" className="info">Replenishment</Link> · <Link href="/ads" className="info">Ads budget</Link> · <Link href="/promotions" className="info">Promotions</Link> · <Link href="/market" className="info">Market segment share</Link></div>
       </section>
-      <AnalyzeButton module="overview" title="What Claude flags across all channels" />
+      <AnalyzeButton module="overview" canRefresh={s.role === "admin"} title="What Claude flags across all channels" />
     </>
   );
 }

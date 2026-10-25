@@ -3,7 +3,8 @@ import { useState } from "react";
 
 type Insight = { headline: string; actions: { title: string; why: string; do: string; impact: string }[]; watch: string[] };
 
-export default function AnalyzeButton({ module, title }: { module: string; title: string }) {
+// canRefresh: only the admin may force a new (paid) Claude call; others see the saved answer.
+export default function AnalyzeButton({ module, title, canRefresh }: { module: string; title: string; canRefresh: boolean }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [insight, setInsight] = useState<Insight | null>(null);
@@ -47,9 +48,17 @@ export default function AnalyzeButton({ module, title }: { module: string; title
         </>
       ) : null}
       {raw ? <div style={{ whiteSpace: "pre-wrap", fontSize: 14 }}>{raw}</div> : null}
-      <button className="btn" onClick={() => run(!!(insight || raw))} disabled={busy}>
-        {busy ? "Claude is reading the data..." : insight || raw ? "Refresh from Claude" : "Analyse with Claude"}
-      </button>
+      {insight || raw ? (
+        canRefresh ? (
+          <button className="btn" onClick={() => run(true)} disabled={busy}>
+            {busy ? "Claude is reading the data..." : "Refresh from Claude"}
+          </button>
+        ) : null
+      ) : (
+        <button className="btn" onClick={() => run(false)} disabled={busy}>
+          {busy ? "Claude is reading the data..." : "Analyse with Claude"}
+        </button>
+      )}
     </section>
   );
 }
