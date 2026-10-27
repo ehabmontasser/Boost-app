@@ -47,7 +47,7 @@ Excel files (BOOST data-sharing standard v1.0) -> `lib/xlsx.ts` (dependency-free
 
 ## Data pack (`datapack/`)
 Python generator for the synthetic pack: `simulate.py` (engine), `spec.py` (standard), `storylines.py`, `build_pack.py`, `validate_pack.py`, `business_numbers.py`, `export_spec.py` (writes `lib/spec.json`).
-Output goes to `datapack/out/` (git-ignored): 5 platforms x 6 feeds x 2 periods = 60 files plus Brand Master plus guide = 62 xlsx files, 150,977 data rows (52 weeks).
+Output goes to `datapack/out/` (git-ignored): 5 platforms x 6 feeds x 2 periods = 60 files plus Brand Master plus guide = 62 xlsx files, 150,987 data rows (52 weeks).
 - Backfill: 27 Oct 2025 to 18 Oct 2026. Weekly update: 19 to 25 Oct 2026.
 - The scripted storylines sit in the last 14 weeks (`ANCHOR` = 20 Jul 2026 in `simulate.py`); growth, market share and stock overrides are anchored there. Earlier months add seasonality (Ramadan, both Eids, Yellow/White Friday, Prime Day, summer) and a March price increase.
 - `build_templates.py` writes blank upload templates with a How to use tab.
