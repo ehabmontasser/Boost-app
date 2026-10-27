@@ -8,12 +8,12 @@ from datetime import date
 
 BRAND = "Sprout Baby Care"
 BRAND_CODE = "SBC"
-START = date(2026, 7, 20)          # Monday
-END = date(2026, 10, 18)           # Sunday
-BACKFILL_END = date(2026, 10, 11)  # Sunday
-UPDATE_START = date(2026, 10, 12)  # Monday
+START = date(2025, 10, 27)         # Monday, 52 weeks before END
+END = date(2026, 10, 25)           # Sunday
+BACKFILL_END = date(2026, 10, 18)  # Sunday
+UPDATE_START = date(2026, 10, 19)  # Monday
 TEMPLATE_VERSION = "v1.0"
-GENERATED = date(2026, 10, 20)
+GENERATED = date(2026, 10, 26)
 
 REGIONS = ["Cairo", "Giza", "Alexandria", "Delta", "Upper Egypt"]
 

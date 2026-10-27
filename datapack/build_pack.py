@@ -12,8 +12,8 @@ import spec
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 PACK = os.path.join(ROOT, "Sprout_Baby_Care_Data_Pack")
-BACKFILL = "02_Backfill_2026-07-20_to_2026-10-11"
-WEEKLY = "03_Weekly_Update_2026-10-12_to_2026-10-18"
+BACKFILL = f"02_Backfill_{spec.START}_to_{spec.BACKFILL_END}"
+WEEKLY = f"03_Weekly_Update_{spec.UPDATE_START}_to_{spec.END}"
 SETUP_DIR = "01_Setup"
 MENU = "Admin > Upload Center"
 DATA_STATUS = "SYNTHETIC DEMO DATA. Not real sales."
@@ -99,7 +99,10 @@ def period_slice(df, col, p0, p1):
 
 def main():
     if os.path.exists(PACK):
-        shutil.rmtree(PACK)
+        shutil.rmtree(PACK, ignore_errors=True)   # a folder open in another program stays behind empty
+        left = [os.path.join(d, f) for d, _, fs in os.walk(PACK) for f in fs]
+        if left:
+            raise SystemExit(f"Close any program using the old pack, then run again ({len(left)} files locked)")
     out = S.build()
     upload_map = []
     seq = 1
@@ -209,7 +212,7 @@ def write_upload_guide(path, upload_map):
         ws.write(0, 0, "BOOST upload guide: Sprout Baby Care data pack", title)
         lines = [
             ("h", "What this pack is"),
-            ("t", f"Synthetic 13-week data for {spec.BRAND} on {len(spec.PLATFORM_FOLDERS)} platforms (Talabat Mart, Noon, Amazon Core, Amazon Now, Breadfast; Amazon is served through two channels) ({spec.START} to {spec.END}), built to the BOOST standard templates."),
+            ("t", f"Synthetic {((spec.END - spec.START).days + 1) // 7}-week data for {spec.BRAND} on {len(spec.PLATFORM_FOLDERS)} platforms (Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast; Amazon Core and Amazon Now are two separate platforms) ({spec.START} to {spec.END}), built to the BOOST standard templates."),
             ("t", "Six feeds per platform: Sales, Inventory, Price and Promo, Ads, Market, Service. One setup workbook (Brand Master) ties everything together."),
             ("t", "Numbers are linked: sales drive stock, stock drives lost sales and wasted ad spend, promos drive volume and margin, and the Market feed reconciles to Sales."),
             ("h", "How the folders map to the app"),
@@ -217,7 +220,7 @@ def write_upload_guide(path, upload_map):
             ("t", "The exact slot for every file is in the Upload_Map tab, column 'slot'."),
             ("h", "Upload order"),
             ("t", "Step 1  Setup. Upload 01_Setup/SETUP_00_BRAND_MASTER_v1.xlsx once, first. Other files are rejected until it exists."),
-            ("t", f"Step 2  Backfill. Upload the {6*len(spec.PLATFORM_FOLDERS)} files in 02_Backfill (6 per platform). Any platform order; inside a platform go 01 to 06 (Sales first). Data then runs to 2026-10-11."),
+            ("t", f"Step 2  Backfill. Upload the {6*len(spec.PLATFORM_FOLDERS)} files in 02_Backfill (6 per platform). Any platform order; inside a platform go 01 to 06 (Sales first). Data then runs to {spec.BACKFILL_END}."),
             ("t", "Step 3  Check Data Freshness. Every card should read green and 'data through 11 Oct'."),
             ("t", f"Step 4  Weekly update. Upload the {6*len(spec.PLATFORM_FOLDERS)} files in 03_Weekly_Update (week of 12 to 18 Oct). Dashboards move to 'data through 18 Oct'. This is the live-upload moment for the demo."),
             ("h", "Rules the importer applies"),

@@ -1,4 +1,7 @@
-"""Sprout Baby Care: 13-week simulation across Talabat Mart, Noon and Amazon.
+"""Sprout Baby Care: 52-week simulation across Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast.
+
+The scripted demo storylines live in the last 14 weeks (from ANCHOR). Growth, market share and the
+stock overrides are anchored there, so the earlier months build up to the same end position.
 
 Everything is synthetic. The structure mirrors what real platform exports contain,
 and the numbers are linked: sales drive stock, stock drives lost sales and ad
@@ -17,6 +20,9 @@ SEED = 20261020
 NT = (spec.END - spec.START).days + 1
 DAYS = [spec.START + timedelta(days=i) for i in range(NT)]
 WEEKS = [spec.START + timedelta(days=7 * i) for i in range(NT // 7)]
+
+
+ANCHOR = date(2026, 7, 20)   # start of the scripted storylines; growth and share are anchored here
 
 
 def idx(d):
@@ -54,6 +60,34 @@ SKU = {s[0]: dict(code=s[0], name=s[1], cat=s[2], sub=s[3], pack=s[4], price=flo
 SKU_CODES = [s[0] for s in SKUS]
 PRICE_STEP = date(2026, 9, 1)     # +6% list price increase on all platforms
 PRICE_STEP_PCT = 0.06
+PRICE_STEPS = [(date(2026, 3, 1), 0.08), (PRICE_STEP, PRICE_STEP_PCT)]   # list prices are current (after both)
+
+
+def season(P, d):
+    """Demand multiplier for the calendar: Ramadan, the two Eids, summer and the year-end events."""
+    qc = PLAT[P]["ptype"] == "Quick commerce"
+    if date(2026, 3, 20) <= d <= date(2026, 3, 22) or date(2026, 5, 26) <= d <= date(2026, 5, 29):
+        return 0.82                                   # Eid al-Fitr, Eid al-Adha: shopping pauses
+    if date(2026, 2, 18) <= d <= date(2026, 3, 19):
+        return 1.10 if qc else 0.97                   # Ramadan: quick commerce up, marketplaces softer
+    if date(2025, 11, 20) <= d <= date(2025, 11, 30):
+        return 1.0 if qc else 1.12                    # Yellow / White Friday traffic on marketplaces
+    if d.month in (6, 7, 8):
+        return 1.04                                   # summer: travel and heat lift wipes
+    if d.month in (12, 1):
+        return 0.97
+    return 1.0
+
+
+def monthly(day_from, day_to, first=date(2025, 11, 1), last=date(2026, 10, 31)):
+    """Windows on the same days of every month, e.g. the 1st to the 5th."""
+    out, y, m = [], first.year, first.month
+    while date(y, m, 1) <= last:
+        a = date(y, m, day_from)
+        b = date(y, m, day_to) if day_to <= 28 else (date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1))
+        out.append((a.isoformat(), b.isoformat()))
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return out
 
 # Per-platform SKU price elasticity multipliers (relative to platform elasticity)
 ELAST_MULT = {
@@ -140,7 +174,7 @@ PARENT = {"Talabat Mart": "Talabat", "Noon": "Noon", "Amazon Core": "Amazon", "A
 PROMOS = {
     "Talabat Mart": [
         dict(id="TLB-PR-01", name="Mart Monthly Saver", type="PRICE_OFF",
-             windows=[("2026-08-01", "2026-08-05"), ("2026-09-01", "2026-09-05"), ("2026-10-01", "2026-10-05")],
+             windows=monthly(1, 5),
              skus=["SBC-02", "SBC-04", "SBC-07", "SBC-11"], depth=0.10, vs=0.5, feat=True),
         dict(id="TLB-PR-02", name="Weekend Wipes Bundle", type="BUNDLE", weekend=True,
              skus=["SBC-04", "SBC-05"], depth=0.12, vs=1.0, feat=False),
@@ -148,10 +182,18 @@ PROMOS = {
              windows=[("2026-09-14", "2026-09-27")], skus=["SBC-01", "SBC-02", "SBC-06"],
              depth=0.15, vs=1.0, feat=True),
         dict(id="TLB-PR-04", name="Pay Week", type="DEAL_EVENT",
-             windows=[("2026-08-25", "2026-08-31"), ("2026-09-25", "2026-09-30")],
+             windows=[w for w in monthly(25, 31, last=date(2026, 9, 30))],
              skus="ALL", depth=0.05, vs=0.0, feat=False),
+        dict(id="TLB-PR-05", name="Ramadan Basket", type="DEAL_EVENT", windows=[("2026-02-18", "2026-03-05")],
+             skus=["SBC-01", "SBC-02", "SBC-04"], depth=0.12, vs=0.5, feat=True),
     ],
     "Noon": [
+        dict(id="NOON-YF", name="Yellow Friday", type="DEAL_EVENT", windows=[("2025-11-20", "2025-11-30")],
+             skus=["SBC-01", "SBC-02", "SBC-03", "SBC-04", "SBC-05", "SBC-10"], depth=0.20, vs=0.5, feat=True),
+        dict(id="NOON-D11", name="11.11 Sale", type="DEAL_EVENT", windows=[("2025-11-10", "2025-11-12")],
+             skus=["SBC-02", "SBC-04", "SBC-09", "SBC-11"], depth=0.15, vs=0.5, feat=True),
+        dict(id="NOON-RM", name="Ramadan Deals", type="DEAL_EVENT", windows=[("2026-02-20", "2026-03-10")],
+             skus=["SBC-01", "SBC-02", "SBC-03", "SBC-12"], depth=0.12, vs=0.5, feat=True),
         dict(id="NOON-D01", name="Summer Deals", type="DEAL_EVENT", windows=[("2026-07-27", "2026-08-02")],
              skus=["SBC-01", "SBC-02", "SBC-03", "SBC-04"], depth=0.12, vs=0.5, feat=True),
         dict(id="NOON-D02", name="Back To School Sale", type="DEAL_EVENT", windows=[("2026-08-24", "2026-09-06")],
@@ -162,10 +204,16 @@ PROMOS = {
         dict(id="NOON-D04", name="10.10 Sale", type="DEAL_EVENT", windows=[("2026-10-08", "2026-10-12")],
              skus=["SBC-02", "SBC-04", "SBC-09", "SBC-11"], depth=0.18, vs=0.5, feat=True),
         dict(id="NOON-CP01", name="SAVE10 Coupon", type="COUPON",
-             windows=[("2026-08-03", "2026-08-16"), ("2026-09-21", "2026-09-30")],
+             windows=[("2026-01-05", "2026-01-18"), ("2026-05-03", "2026-05-16"), ("2026-08-03", "2026-08-16"), ("2026-09-21", "2026-09-30")],
              skus="ALL", depth=0.10, vs=0.0, feat=False),
     ],
     "Amazon Core": [
+        dict(id="AMZ-WF", name="White Friday", type="DEAL_EVENT", windows=[("2025-11-20", "2025-11-30")],
+             skus=["SBC-01", "SBC-02", "SBC-03", "SBC-04"], depth=0.20, vs=1.0, feat=True),
+        dict(id="AMZ-RM", name="Ramadan Offers", type="DEAL_EVENT", windows=[("2026-02-20", "2026-03-10")],
+             skus=["SBC-02", "SBC-03", "SBC-10", "SBC-11"], depth=0.10, vs=0.5, feat=True),
+        dict(id="AMZ-PD", name="Prime Day", type="DEAL_EVENT", windows=[("2026-07-07", "2026-07-09")],
+             skus=["SBC-02", "SBC-03", "SBC-04"], depth=0.20, vs=1.0, feat=True),
         dict(id="AMZ-LD01", name="Lightning Deal", type="LIGHTNING_DEAL", windows=[("2026-08-12", "2026-08-12")],
              skus=["SBC-02"], depth=0.30, vs=1.0, feat=True),
         dict(id="AMZ-D02", name="Back To School Deals", type="DEAL_EVENT", windows=[("2026-08-20", "2026-09-10")],
@@ -212,6 +260,10 @@ CAMPAIGNS = {
 }
 
 PROMOS["Amazon Now"] = [
+    dict(id="AMN-RM", name="Ramadan Basket", type="DEAL_EVENT", windows=[("2026-02-18", "2026-03-05")],
+         skus=["SBC-01", "SBC-02", "SBC-06"], depth=0.12, vs=0.5, feat=True),
+    dict(id="AMN-WF", name="White Friday", type="DEAL_EVENT", windows=[("2025-11-20", "2025-11-30")],
+         skus=["SBC-01", "SBC-02"], depth=0.15, vs=1.0, feat=True),
     dict(id="AMN-D01", name="Weekend Fresh Deals", type="PRICE_OFF", weekend=True,
          skus=["SBC-01", "SBC-02", "SBC-07"], depth=0.10, vs=0.5, feat=True),
     dict(id="AMN-D02", name="Back To School Basket", type="DEAL_EVENT", windows=[("2026-09-14", "2026-09-27")],
@@ -221,8 +273,10 @@ PROMOS["Breadfast"] = [
     dict(id="BRF-PR-01", name="Weekly Offers", type="PRICE_OFF", weekend=True,
          skus=["SBC-02", "SBC-04", "SBC-07"], depth=0.08, vs=0.5, feat=True),
     dict(id="BRF-PR-02", name="Monthly Bonanza", type="DEAL_EVENT",
-         windows=[("2026-08-01", "2026-08-03"), ("2026-09-01", "2026-09-03"), ("2026-10-01", "2026-10-03")],
+         windows=monthly(1, 3),
          skus=["SBC-02", "SBC-11"], depth=0.10, vs=0.5, feat=True),
+    dict(id="BRF-RM", name="Ramadan Basket", type="DEAL_EVENT", windows=[("2026-02-18", "2026-03-05")],
+         skus=["SBC-01", "SBC-02", "SBC-04"], depth=0.12, vs=0.5, feat=True),
     dict(id="BRF-PR-03", name="Back To School Basket", type="DEAL_EVENT", windows=[("2026-09-14", "2026-09-27")],
          skus=["SBC-01", "SBC-02", "SBC-06"], depth=0.12, vs=1.0, feat=True),
 ]
@@ -252,24 +306,24 @@ SMALL_PACK_CHANNELS = ("Amazon Now", "Breadfast")
 # Listing suppression windows (physical stock exists but the SKU cannot be bought)
 SUPPRESSION = {("Talabat Mart", "SBC-09"): ("2026-09-08", "2026-09-28")}
 
-# Initial cover overrides in days
+# Stock cover overrides in days, applied at ANCHOR (an over-order landing for cover above normal, a write-down below)
 INIT_COVER = {("Amazon Core", "SBC-05"): 340, ("Amazon Core", "SBC-01"): 85, ("Noon", "SBC-09"): 7}
 
 # Lead time shocks: (platform, sku, node or '*') -> list of (placed_from, placed_to, extra_days)
 LT_SHOCK = {
-    ("Talabat Mart", "SBC-02", "TLB-GIZ"): [("2026-09-05", "2026-09-13", 12), ("2026-10-05", "2026-10-17", 13)],
-    ("Talabat Mart", "SBC-02", "TLB-CAI-E"): [("2026-10-08", "2026-10-17", 10)],
-    ("Noon", "SBC-09", "*"): [("2026-08-25", "2026-10-18", 3)],
+    ("Talabat Mart", "SBC-02", "TLB-GIZ"): [("2026-09-05", "2026-09-13", 12), ("2026-10-18", "2026-10-24", 13)],
+    ("Talabat Mart", "SBC-02", "TLB-CAI-E"): [("2026-10-21", "2026-10-24", 10)],
+    ("Noon", "SBC-09", "*"): [("2026-08-25", "2026-10-25", 3)],
 }
 # PO confirmation (share of requested units the platform confirms): (platform, sku) -> [(from, to, rate)]
 CONFIRM_SHOCK = {
-    ("Noon", "SBC-09"): [("2026-08-25", "2026-10-18", 0.70)],
-    ("Amazon Core", "SBC-02"): [("2026-07-20", "2026-10-18", 0.88)],
+    ("Noon", "SBC-09"): [("2026-08-25", "2026-10-25", 0.70)],
+    ("Amazon Core", "SBC-02"): [("2025-10-27", "2026-10-25", 0.88)],
 }
 # Forced PO events (automatic reorders that should not have happened)
 FORCED_PO = {
-    ("Amazon Core", "SBC-05", "AMZ-CAI1"): [("2026-10-06", 1500, "2026-10-27")],
-    ("Amazon Core", "SBC-05", "AMZ-ALX1"): [("2026-10-06", 900, "2026-10-27")],
+    ("Amazon Core", "SBC-05", "AMZ-CAI1"): [("2026-10-13", 1500, "2026-11-03")],
+    ("Amazon Core", "SBC-05", "AMZ-ALX1"): [("2026-10-13", 900, "2026-11-03")],
 }
 
 # ----------------------------------------------------------------------------
@@ -367,12 +421,13 @@ def build(seed=SEED):
                 psid[(P, k)] = "BRF-" + "".join(idrng.choice(list("0123456789"), 5))
 
     # ---- Price path ------------------------------------------------------------
-    step_t = idx(PRICE_STEP)
+    ta = idx(ANCHOR)
     LP = np.zeros((NT, len(SKU_CODES)))
     for k in SKU_CODES:
         p = SKU[k]["price"]
         for t in range(NT):
-            LP[t, SKU[k]["idx"]] = round(p / (1 + PRICE_STEP_PCT), 2) if t < step_t else p
+            later = np.prod([1 + pct for d, pct in PRICE_STEPS if t < idx(d)])
+            LP[t, SKU[k]["idx"]] = round(p / later, 2)
 
     caps = {}
     out = {"platforms": {}, "diag": {}}
@@ -442,11 +497,13 @@ def build(seed=SEED):
         dow = dow_factors(cfg["dow_amp"])
         shock = rng.lognormal(0, 0.05, NT)
         D = {s: {} for s in skus}
-        base_t = np.array([(1 + cfg["growth"]) ** (t / 7) for t in range(NT)])
+        base_t = np.array([(1 + cfg["growth"]) ** ((t - ta) / 7) for t in range(NT)])
         pay_t = np.array([cfg["payday"] if (DAYS[t].day >= 25 or DAYS[t].day <= 3) else 1.0 for t in range(NT)])
         dow_t = np.array([dow[DAYS[t].weekday()] for t in range(NT)])
-        price_t = np.array([(1 + PRICE_STEP_PCT) ** (-0.5) if t >= step_t else 1.0 for t in range(NT)])
-        gen_t = base_t * pay_t * dow_t * shock * price_t
+        price_lvl = lambda t: np.prod([(1 + pct) ** (-0.5) for d, pct in PRICE_STEPS if t >= idx(d)])
+        price_t = np.array([price_lvl(t) / price_lvl(ta) for t in range(NT)])
+        seas_t = np.array([season(P, DAYS[t]) for t in range(NT)])
+        gen_t = base_t * pay_t * dow_t * shock * price_t * seas_t
         for s in skus:
             j = kx[s]
             for r in regs:
@@ -480,7 +537,7 @@ def build(seed=SEED):
             capd = CAP_DAYS.get((P, s), CAP_DEFAULT.get(P))
             cap = max(2 * case, int(math.ceil(capd * mu0 / case)) * case) if capd else None
             caps[(P, s, n)] = cap
-            on_hand = int(round(INIT_COVER.get((P, s), cfg["tcover"]) * mu0))
+            on_hand = int(round(cfg["tcover"] * mu0))
             if cap:
                 on_hand = min(on_hand, cap)
             pipe = []   # dict(arr, qty, placed, lt)
@@ -488,6 +545,18 @@ def build(seed=SEED):
             hist = []
             forced = {idx(a): (q, idx(e)) for a, q, e in FORCED_PO.get((P, s, n), [])}
             for t in range(NT):
+                if t == ta and (P, s) in INIT_COVER:
+                    fc_a = float(np.mean(hist[-14:])) if hist else mu0
+                    target = int(round(INIT_COVER[(P, s)] * fc_a))
+                    if cap:
+                        target = min(target, cap)
+                    if target > on_hand:   # an over-order lands: log it as a PO placed one lead time earlier
+                        q = int(math.ceil((target - on_hand) / case)) * case
+                        on_hand += q
+                        po_rows.append(dict(P=P, s=s, n=n, placed=max(0, t - lt), req=q, conf=q, arr=t, lt=lt, recv=False))
+                        po_rows.append(dict(P=P, s=s, n=n, placed=max(0, t - lt), req=q, conf=q, arr=t, lt=lt, recv=True))
+                    else:
+                        on_hand = target
                 arrived = [p for p in pipe if p["arr"] == t]
                 pipe = [p for p in pipe if p["arr"] > t]
                 on_hand += sum(p["qty"] for p in arrived)
@@ -720,21 +789,27 @@ def build(seed=SEED):
         stock_wk = inv.groupby(["_s", "_w"])["in_stock_rate_pct"].mean()
         cat_rows, sku_rows = [], []
         # category totals
+        wa = idx(ANCHOR) // 7
+        # category seasonality follows the same calendar as Sprout's demand
+        seas_w = [float(np.mean([season(P, WEEKS[w] + timedelta(days=k)) for k in range(7)])) for w in range(len(WEEKS))]
         for cat in ["Wipes", "Skin Care"]:
             sp_cat = wk_sku[wk_sku["_s"].map(lambda x: SKU[x]["cat"] == cat)].groupby("_w")["gmv"].sum()
-            c0 = float(sp_cat.iloc[0]) / TARGET_SHARE[(P, cat)]
+            c0 = float(sp_cat.iloc[wa]) / TARGET_SHARE[(P, cat)]
+            # before ANCHOR the category grows a little slower than Sprout (share builds up); after it, faster (share slips)
+            g_pre = PLAT[P]["growth"] - 0.002
             comps = [(i, c) for i, c in enumerate(COMP) if c[2] == cat and not (P in SMALL_PACK_CHANNELS and ("3x" in c[1] or "500ml" in c[1]))]
             for w in range(len(WEEKS)):
-                total = c0 * (1 + CAT_GROWTH[P]) ** w * mrng.lognormal(0, 0.015)
+                g = CAT_GROWTH[P] if w >= wa else g_pre
+                total = c0 * (1 + g) ** (w - wa) * seas_w[w] / seas_w[wa] * mrng.lognormal(0, 0.015)
                 sprout = float(sp_cat.get(w, 0.0))
                 pool = max(total - sprout, 0.5 * total)
                 total = sprout + pool
-                wts = np.array([c[5] * SUB_MULT[P][c[3]] * (1 + c[6]) ** w * mrng.lognormal(0, 0.05) for _, c in comps])
+                wts = np.array([c[5] * SUB_MULT[P][c[3]] * (1 + c[6]) ** max(0, w - wa) * mrng.lognormal(0, 0.05) for _, c in comps])
                 named = pool * NAMED_SHARE_OF_POOL * wts / wts.sum()
                 tail = pool * (1 - NAMED_SHARE_OF_POOL)
                 rows = []   # (brand, product, sub, price, value, units, id, gtin, own, instock, sku_code)
                 for (i, c), v in zip(comps, named):
-                    pr_ = c[4] * (1 + mrng.normal(0, 0.01)) * (1.0 if WEEKS[w] < PRICE_STEP else 1.03)
+                    pr_ = c[4] * (1 + mrng.normal(0, 0.01)) * (0.96 if WEEKS[w] < PRICE_STEPS[0][0] else 1.0 if WEEKS[w] < PRICE_STEP else 1.03)
                     rows.append(dict(brand=c[0], product=c[1], sub=c[3], price=pr_, gmv=float(v),
                                      units=int(round(v / pr_)), id=comp_ids[(P, i)], gtin=comp_gtin[i], own="N",
                                      instock=float(np.clip(mrng.normal(0.985 if c[0] == "Nuvo Baby" else 0.955, 0.02), 0.85, 1.0)),
