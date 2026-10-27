@@ -17,30 +17,30 @@ export default async function Overview() {
   const talabat = m.rows.find((r) => r.wipesFirst !== null && r.wipesLast !== null && r.wipesFirst - r.wipesLast > 0.01);
   return (
     <>
-      <Header title="Overview" sub={`${c.brandName} · ${m.rows.length} channels · data through ${new Date(c.asOf + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}`} />
+      <Header title="Overview" sub={`${c.brandName} · ${m.rows.length} platforms · data through ${new Date(c.asOf + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}`} />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Net sales ex VAT" value={egp(m.totalNet)} note={`${m.rows.length} channels, 13 weeks`} />
+        <Kpi label="Net sales ex VAT" value={egp(m.totalNet)} note={`${m.rows.length} platforms, 13 weeks`} />
         <Kpi label="Ad spend" value={egp(m.totalSpend)} note={`${pct(m.spendPct)} of sales`} />
         <Kpi label="Demand lost to stockouts" value={egp(m.totalLost)} tone="bad" note={`${pct(m.lostPct)} of sales${worst ? ` · worst: ${worst.name} ${pct(worst.lostPct)}` : ""}`} />
         {talabat ? <Kpi label={`Wipes share, ${talabat.name}`} value={pct(talabat.wipesLast ?? 0)} tone="bad" note={`Down ${(((talabat.wipesFirst ?? 0) - (talabat.wipesLast ?? 0)) * 100).toFixed(1)} pts since week 1`} /> : null}
       </section>
       <div className="row">
         <section className="card wide">
-          <h2>Net sales by channel</h2>
+          <h2>Net sales by platform</h2>
           <Bars rows={[...m.rows].sort((a, b) => b.net - a.net).map((r) => ({ code: r.code, label: r.name, value: r.net }))} format={(n) => egp(n)} />
-          <div className="muted">All values ex VAT, EGP. Bar length is relative to the largest channel.</div>
+          <div className="muted">All values ex VAT, EGP. Bar length is relative to the largest platform.</div>
         </section>
         <section className="card">
           <h2>Wipes share of the platform segment</h2>
-          <ShareLines series={m.market.wipes} label="Wipes share by channel from week 1 to the latest week" />
+          <ShareLines series={m.market.wipes} label="Wipes share by platform from week 1 to the latest week" />
           <div className="muted">Sprout's share of wipes sales on each platform, by week.</div>
         </section>
       </div>
       <section className="card">
-        <h2>Channel scorecard</h2>
+        <h2>Platform scorecard</h2>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Channel</th><th className="r">Net sales</th><th className="r">Ad spend</th><th className="r">ROAS</th><th className="r">Lost to stockouts</th><th className="r">Wipes share</th></tr></thead>
+            <thead><tr><th>Platform</th><th className="r">Net sales</th><th className="r">Ad spend</th><th className="r">ROAS</th><th className="r">Lost to stockouts</th><th className="r">Wipes share</th></tr></thead>
             <tbody>
               {m.rows.map((r) => (
                 <tr key={r.code}>
@@ -57,7 +57,7 @@ export default async function Overview() {
         </div>
         <div className="muted">Go deeper: <Link href="/replenishment" className="info">Replenishment</Link> · <Link href="/ads" className="info">Ads budget</Link> · <Link href="/promotions" className="info">Promotions</Link> · <Link href="/market" className="info">Market segment share</Link></div>
       </section>
-      <AnalyzeButton module="overview" canRefresh={s.role === "admin"} title="What Claude flags across all channels" />
+      <AnalyzeButton module="overview" canRefresh={s.role === "admin"} title="What Claude flags across all platforms" />
     </>
   );
 }

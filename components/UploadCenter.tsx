@@ -51,7 +51,7 @@ export default function UploadCenter({ setupDone }: { setupDone: boolean }) {
         <div className="notice n-warn">No Brand Master yet. Upload SETUP_00_BRAND_MASTER first. It is sent first automatically when you select it together with other files.</div>
       ) : null}
       <div className="dz">
-        <div><b>Select one or many .xlsx files.</b> Each file is checked, routed to its channel and card from its Meta tab, and replaced by key if it was loaded before. Safe to repeat.</div>
+        <div><b>Select one or many .xlsx files.</b> Each file is checked, routed to its platform and card from its Meta tab, and replaced by key if it was loaded before. Safe to repeat.</div>
         <input ref={input} type="file" accept=".xlsx" multiple disabled={busy} aria-label="Choose xlsx files"
           onChange={(e) => send(Array.from(e.target.files ?? []))} />
         {busy ? <div className="muted" role="status">{progress}</div> : null}

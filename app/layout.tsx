@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "BOOST",
-  description: "One view of every e-commerce and quick-commerce channel, with a clear next action.",
+  description: "One view of every e-commerce and quick-commerce platform, with a clear next action.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

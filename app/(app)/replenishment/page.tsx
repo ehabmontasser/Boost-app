@@ -26,7 +26,7 @@ export default async function Replenishment() {
         <h2>Needs action</h2>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Channel · node</th><th>SKU</th><th className="r">On hand</th><th className="r">Cover</th><th>Next PO lands</th><th className="r">Short by</th><th>Status</th></tr></thead>
+            <thead><tr><th>Platform · node</th><th>SKU</th><th className="r">On hand</th><th className="r">Cover</th><th>Next PO lands</th><th className="r">Short by</th><th>Status</th></tr></thead>
             <tbody>
               {m.action.length === 0 ? <tr><td colSpan={7} className="muted">Nothing needs action.</td></tr> : m.action.map((r, i) => (
                 <tr key={i}>
@@ -48,7 +48,7 @@ export default async function Replenishment() {
           <h2>Overstock</h2>
           {m.overstock.length === 0 ? <div className="muted">No SKU is above its maximum cover.</div> : (
             <div className="tablewrap"><table>
-              <thead><tr><th>Channel · SKU</th><th className="r">On hand</th><th className="r">Cover</th><th className="r">Open PO</th></tr></thead>
+              <thead><tr><th>Platform · SKU</th><th className="r">On hand</th><th className="r">Cover</th><th className="r">Open PO</th></tr></thead>
               <tbody>{m.overstock.slice(0, 6).map((o, i) => (
                 <tr key={i}><td><b>{o.name}</b><div className="muted">{o.skuName}</div></td><td className="r">{int(o.onHand)}</td>
                   <td className="r"><Pill tone="info">{int(o.cover)} days</Pill></td>
@@ -60,7 +60,7 @@ export default async function Replenishment() {
         <section className="card">
           <h2>Demand lost to stockouts</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel</th><th className="r">Lost</th><th className="r">% of sales</th></tr></thead>
+            <thead><tr><th>Platform</th><th className="r">Lost</th><th className="r">% of sales</th></tr></thead>
             <tbody>{[...m.channel].sort((a, b) => b.lostPct - a.lostPct).map((x) => (
               <tr key={x.code}><td><b>{x.name}</b></td><td className="r">{egp(x.lostValue)}</td><td className={"r " + (x.lostPct > 0.03 ? "bad" : "")}>{pct(x.lostPct)}</td></tr>
             ))}</tbody>
@@ -72,7 +72,7 @@ export default async function Replenishment() {
         <section className="card">
           <h2>Biggest lost-demand lines</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel · SKU</th><th className="r">Lost</th><th className="r">In stock</th></tr></thead>
+            <thead><tr><th>Platform · SKU</th><th className="r">Lost</th><th className="r">In stock</th></tr></thead>
             <tbody>{m.lostTop.slice(0, 6).map((x, i) => (
               <tr key={i}><td><b>{x.name}</b><div className="muted">{x.skuName}</div></td><td className="r">{egp(x.value)}</td><td className="r">{pct(x.inStock)}</td></tr>
             ))}</tbody>
@@ -81,7 +81,7 @@ export default async function Replenishment() {
         <section className="card">
           <h2>Weakest supplier performance</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel · SKU</th><th className="r">PO confirmed</th><th className="r">Lead time</th></tr></thead>
+            <thead><tr><th>Platform · SKU</th><th className="r">PO confirmed</th><th className="r">Lead time</th></tr></thead>
             <tbody>{m.lowestConfirm.map((x, i) => (
               <tr key={i}><td><b>{x.name}</b><div className="muted">{x.skuName}</div></td><td className="r">{pct(x.confirmRate ?? 0, 0)}</td><td className="r">{x.lead.toFixed(1)} days</td></tr>
             ))}</tbody>

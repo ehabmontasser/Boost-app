@@ -19,10 +19,10 @@ export default async function Freshness() {
   const newest = rows.reduce((m, r) => (r.through_date > m ? r.through_date : m), "");
   return (
     <>
-      <Header title="Data freshness" sub="How recent the data is on every channel and card. Green is current, amber is a week or more behind the newest data." />
+      <Header title="Data freshness" sub="How recent the data is on every platform and card. Green is current, amber is a week or more behind the newest data." />
       <section className="card">
         <div className="tablewrap"><table>
-          <thead><tr><th>Channel</th>{FEEDS.map((f) => (<th key={f}>{TITLES[f].title}</th>))}</tr></thead>
+          <thead><tr><th>Platform</th>{FEEDS.map((f) => (<th key={f}>{TITLES[f].title}</th>))}</tr></thead>
           <tbody>
             {c.platforms.map((p) => (
               <tr key={p.code}>

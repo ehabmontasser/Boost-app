@@ -26,7 +26,7 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
         brand: c.brandName, asOf, currency: "EGP ex VAT",
         note: "wipesSegmentShare = Sprout's share of all wipes sales on that platform, all brands included (a fraction, 0.188 = 18.8%). It is market share, not a share of Sprout's own sales.",
         totals: { netSales: r(m.totalNet), adSpend: r(m.totalSpend), adSpendPct: r(m.spendPct, 3), lostDemand: r(m.totalLost), lostDemandPct: r(m.lostPct, 3) },
-        channels: m.rows.map((x) => ({ channel: x.name, type: x.channel, netSales: r(x.net), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareFirstWeek: x.wipesFirst === null ? null : r(x.wipesFirst, 3), wipesSegmentShareLatest: x.wipesLast === null ? null : r(x.wipesLast, 3) })),
+        platforms: m.rows.map((x) => ({ platform: x.name, platformType: x.channel, netSales: r(x.net), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareFirstWeek: x.wipesFirst === null ? null : r(x.wipesFirst, 3), wipesSegmentShareLatest: x.wipesLast === null ? null : r(x.wipesLast, 3) })),
       } };
     }
     case "replenishment": {
@@ -34,11 +34,11 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       if (!m) return null;
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, currency: "EGP ex VAT", note: "cover = on hand / average daily units of the last 14 days. gapDays = days a node is expected to be empty before the next PO lands. Lost demand covers all loaded data, 13 weeks up to asOf.",
-        atRisk: m.atRisk.slice(0, 10).map((x) => ({ channel: x.platformName, node: x.nodeName, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover, 1), nextPoEta: x.eta, gapDays: r(x.gapDays, 1), unitsAtRisk: r(x.unitsAtRisk) })),
-        overstock: m.overstock.slice(0, 5).map((x) => ({ channel: x.name, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover), openPoUnits: x.openPo, nextPoEta: x.eta, maxCoverDays: x.maxCover })),
-        lostDemandByChannel: m.channel.map((x) => ({ channel: x.name, lostDemandEgp: r(x.lostValue), lostPctOfSales: r(x.lostPct, 3) })),
-        topLostSkus: m.lostTop.slice(0, 6).map((x) => ({ channel: x.name, sku: x.skuName, lostDemandEgp: r(x.value), inStockRate: r(x.inStock, 3) })),
-        lowestPoConfirmation: m.lowestConfirm.map((x) => ({ channel: x.name, sku: x.skuName, confirmRate: r(x.confirmRate ?? 0, 2), avgLeadTimeDays: r(x.lead, 1) })),
+        atRisk: m.atRisk.slice(0, 10).map((x) => ({ platform: x.platformName, node: x.nodeName, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover, 1), nextPoEta: x.eta, gapDays: r(x.gapDays, 1), unitsAtRisk: r(x.unitsAtRisk) })),
+        overstock: m.overstock.slice(0, 5).map((x) => ({ platform: x.name, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover), openPoUnits: x.openPo, nextPoEta: x.eta, maxCoverDays: x.maxCover })),
+        lostDemandByPlatform: m.channel.map((x) => ({ platform: x.name, lostDemandEgp: r(x.lostValue), lostPctOfSales: r(x.lostPct, 3) })),
+        topLostSkus: m.lostTop.slice(0, 6).map((x) => ({ platform: x.name, sku: x.skuName, lostDemandEgp: r(x.value), inStockRate: r(x.inStock, 3) })),
+        lowestPoConfirmation: m.lowestConfirm.map((x) => ({ platform: x.name, sku: x.skuName, confirmRate: r(x.confirmRate ?? 0, 2), avgLeadTimeDays: r(x.lead, 1) })),
       } };
     }
     case "ads": {
@@ -46,8 +46,8 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, note: "ROAS = attributed 7-day sales / ad spend. lostShare = share of impressions lost to budget.",
         totals: { adSpend: r(m.totalSpend), attributedSales: r(m.totalAtt), roas: r(m.roas, 2), spendInCampaignsBelowTargetRoas: r(m.belowSpend) },
-        campaigns: m.rows.slice(0, 14).map((x) => ({ channel: x.name, campaign: x.campaign, type: x.type, objective: x.objective, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, shareOfChannelSpend: r(x.spendShare, 3), lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
-        spendOnSuppressedListings: m.suppressed.map((x) => ({ channel: x.name, spend: r(x.spend), attributedSales: r(x.att) })),
+        campaigns: m.rows.slice(0, 14).map((x) => ({ platform: x.name, campaign: x.campaign, type: x.type, objective: x.objective, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, shareOfPlatformSpend: r(x.spendShare, 3), lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
+        spendOnSuppressedListings: m.suppressed.map((x) => ({ platform: x.name, spend: r(x.spend), attributedSales: r(x.att) })),
       } };
     }
     case "promotions": {
@@ -55,7 +55,7 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, method: "Estimated profit effect = (promo-period daily units x promo margin - 14-day pre-period daily units x normal margin) x promo days, after platform margin, COGS and the vendor-funded discount.",
         totals: { dilutive: r(m.dilutive), accretive: r(m.accretive) },
-        promotions: m.rows.map((x) => ({ channel: x.name, promo: x.promo, type: x.type, funding: x.funding, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
+        promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
       } };
     }
     case "market": {
@@ -63,10 +63,10 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       return { brandId: c.brandId, data: {
         brand: c.brandName, asOf, latestWeek: m.latestWeek,
         note: "Segment share = Sprout's share of all sales in that category on that platform, all brands included (a fraction, 0.188 = 18.8%).",
-        wipesSegmentShare: m.wipes.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
-        skinCareSegmentShare: m.skin.map((s) => ({ channel: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
+        wipesSegmentShare: m.wipes.map((s) => ({ platform: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
+        skinCareSegmentShare: m.skin.map((s) => ({ platform: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
         topWipesSkus: Object.fromEntries(Object.entries(m.top).map(([k, v]) => [c.nameOf(k), v.slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, subCategory: x.sub, own: x.own }))])),
-        brandSkusNotListed: m.gaps.map((g) => ({ channel: g.name, missing: g.missing })),
+        brandSkusNotListed: m.gaps.map((g) => ({ platform: g.name, missing: g.missing })),
       } };
     }
   }
@@ -77,9 +77,9 @@ const SYSTEM = `You are a senior e-commerce and quick-commerce analyst advising 
 Method:
 1. Use only the figures provided. Never invent numbers, never estimate figures that are not given. If something cannot be concluded from the data, say so in "watch".
 2. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
-3. Every action must cite the specific figures that justify it, name the channel and SKU or campaign, and say exactly what to do and by when if a date is given.
+3. Every action must cite the specific figures that justify it, name the platform and SKU or campaign, and say exactly what to do and by when if a date is given.
 4. Separate facts (from the data) from judgement (your recommendation). Flag assumptions and uncertainty plainly.
-5. Treat each channel on its own economics. Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are two separate platforms.
+5. Treat each platform on its own economics. Call Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast "platforms", never "channels". Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are two separate platforms.
 6. Write plainly, no jargon, no emojis, no em dashes. Short sentences.
 
 Return ONLY a JSON object, no markdown, with this shape:

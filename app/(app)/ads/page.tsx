@@ -18,7 +18,7 @@ export default async function Ads() {
     <>
       <Header title="Ads budget" sub="ROAS = attributed 7-day sales / ad spend, all values ex VAT" />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Ad spend" value={egp(m.totalSpend)} note="13 weeks, all channels" />
+        <Kpi label="Ad spend" value={egp(m.totalSpend)} note="13 weeks, all platforms" />
         <Kpi label="Blended ROAS" value={m.roas.toFixed(2)} note={`${egp(m.totalAtt)} attributed sales`} />
         <Kpi label="Spend below target ROAS" value={egp(m.belowSpend)} tone="warn" note={`${pct(m.totalSpend ? m.belowSpend / m.totalSpend : 0, 0)} of all spend`} />
         <Kpi label="Spent on suppressed listings" value={egp(suppressed)} tone={suppressed ? "bad" : "good"} note={m.suppressed.length ? m.suppressed.map((x) => x.name).join(", ") : "None"} />
@@ -27,7 +27,7 @@ export default async function Ads() {
         <h2>Campaigns</h2>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Channel · campaign</th><th>Type</th><th className="r">Spend</th><th className="r">Share of channel</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Lost to budget</th><th>Signal</th></tr></thead>
+            <thead><tr><th>Platform · campaign</th><th>Type</th><th className="r">Spend</th><th className="r">Share of platform</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Lost to budget</th><th>Signal</th></tr></thead>
             <tbody>
               {m.rows.map((r) => (
                 <tr key={r.platform + r.id}>
@@ -50,7 +50,7 @@ export default async function Ads() {
         <section className="card">
           <h2>Ad spend on suppressed listings</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel</th><th className="r">Spend</th><th className="r">Attributed sales</th></tr></thead>
+            <thead><tr><th>Platform</th><th className="r">Spend</th><th className="r">Attributed sales</th></tr></thead>
             <tbody>{m.suppressed.map((x) => (<tr key={x.platform}><td><b>{x.name}</b></td><td className="r bad">{egp(x.spend, false)}</td><td className="r">{egp(x.att, false)}</td></tr>))}</tbody>
           </table></div>
           <div className="muted">Spend on days when the listing was suppressed on the platform. It buys nothing, so pause the campaign until the listing is back.</div>

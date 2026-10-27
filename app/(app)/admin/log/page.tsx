@@ -45,7 +45,7 @@ export default async function Log() {
         <h2>SKU mapping queue</h2>
         {queue.length === 0 ? <div className="muted">Empty. Every platform SKU in the uploads matches the Brand Master.</div> : (
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel</th><th>Platform SKU</th><th>GTIN</th><th>First seen in</th></tr></thead>
+            <thead><tr><th>Platform</th><th>Platform SKU</th><th>GTIN</th><th>First seen in</th></tr></thead>
             <tbody>{queue.map((r, i) => (<tr key={i}><td>{r.platform}</td><td>{r.platform_sku_id}</td><td>{r.gtin ?? "-"}</td><td>{r.first_seen_file}</td></tr>))}</tbody>
           </table></div>
         )}

@@ -12,7 +12,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <span style={{ color: "var(--ink)" }}>BOOST</span>
         </div>
         <div>
-          <h1 style={{ fontSize: 26 }}>See every channel in one place</h1>
+          <h1 style={{ fontSize: 26 }}>See every platform in one place</h1>
           <p className="muted" style={{ fontSize: 15, margin: "8px 0 0" }}>
             Stock, ads, promotions and segment share across e-commerce and quick-commerce platforms, with a clear next action.
           </p>

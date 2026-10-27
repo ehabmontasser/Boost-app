@@ -22,7 +22,7 @@ export default async function Upload() {
         <h2>Order of work</h2>
         <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
           <li>Brand Master (SETUP_00_BRAND_MASTER_v1.xlsx). Nothing else loads until this exists.</li>
-          <li>The 30 backfill files (20 Jul to 11 Oct). Select a whole channel folder at once.</li>
+          <li>The 30 backfill files (20 Jul to 11 Oct). Select a whole platform folder at once.</li>
           <li>Check Data freshness reads &quot;through 11 Oct&quot; on every card.</li>
           <li>The 30 weekly files (12 to 18 Oct). Same steps.</li>
         </ol>
@@ -32,7 +32,7 @@ export default async function Upload() {
       <section className="card">
         <h2>What is loaded</h2>
         <div className="tablewrap"><table>
-          <thead><tr><th>Channel</th>{FEEDS.map((f) => (<th key={f}>{TITLES[f].title}</th>))}</tr></thead>
+          <thead><tr><th>Platform</th>{FEEDS.map((f) => (<th key={f}>{TITLES[f].title}</th>))}</tr></thead>
           <tbody>{platforms.map((p) => (
             <tr key={p.code}>
               <td><b>{p.name}</b></td>

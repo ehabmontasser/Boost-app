@@ -16,7 +16,7 @@ export default async function Promotions() {
     <>
       <Header title="Promotions" sub="Estimated profit effect against the 14 days before each promotion, after platform margin, cost of goods and the brand-funded discount" />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Promotions analysed" value={String(m.rows.length)} note="across all channels" />
+        <Kpi label="Promotions analysed" value={String(m.rows.length)} note="across all platforms" />
         <Kpi label="Profit given away" value={egp(m.dilutive)} tone="bad" note={`${m.rows.filter((r) => r.effect < 0).length} promotions lost money`} />
         <Kpi label="Profit added" value={egp(m.accretive)} tone="good" note={`${m.rows.filter((r) => r.effect > 0).length} promotions earned their cost`} />
         <Kpi label="Net effect" value={egp(m.dilutive + m.accretive)} tone={m.dilutive + m.accretive < 0 ? "bad" : "good"} note={worst ? `Worst: ${worst.name}, ${worst.promo}` : undefined} />
@@ -25,7 +25,7 @@ export default async function Promotions() {
         <h2>Every promotion, worst first</h2>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Channel · promotion</th><th>Funding</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
+            <thead><tr><th>Platform · promotion</th><th>Funding</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
             <tbody>
               {m.rows.map((r) => (
                 <tr key={r.platform + r.promo}>

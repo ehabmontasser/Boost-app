@@ -19,25 +19,25 @@ export default async function Market() {
     <>
       <Header title="Market segment share" sub={`Sprout's share of each platform's segment sales · latest week starting ${dateLabel(m.latestWeek)}`} />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Channels losing wipes share" value={`${falling.length} of ${m.wipes.length}`} tone={falling.length ? "bad" : "good"} note="since week 1" />
+        <Kpi label="Platforms losing wipes share" value={`${falling.length} of ${m.wipes.length}`} tone={falling.length ? "bad" : "good"} note="since week 1" />
         {worst ? <Kpi label={`Biggest drop: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone="bad" note={`${pct(worst.share[0])} to ${pct(worst.share[worst.share.length - 1])}`} /> : null}
-        <Kpi label="Channels with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
+        <Kpi label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
       </section>
       <div className="row">
         <section className="card">
-          <h2>Wipes share by channel</h2>
-          <ShareLines series={m.wipes} label="Wipes share by channel from week 1 to the latest week" />
+          <h2>Wipes share by platform</h2>
+          <ShareLines series={m.wipes} label="Wipes share by platform from week 1 to the latest week" />
         </section>
         <section className="card">
-          <h2>Skin care share by channel</h2>
-          <ShareLines series={m.skin} label="Skin care share by channel from week 1 to the latest week" />
+          <h2>Skin care share by platform</h2>
+          <ShareLines series={m.skin} label="Skin care share by platform from week 1 to the latest week" />
         </section>
       </div>
       <section className="card">
-        <h2>Who leads each channel (wipes, latest week)</h2>
+        <h2>Who leads each platform (wipes, latest week)</h2>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Channel</th><th>#1</th><th>#2</th><th>#3</th><th>Sprout's best rank</th></tr></thead>
+            <thead><tr><th>Platform</th><th>#1</th><th>#2</th><th>#3</th><th>Sprout's best rank</th></tr></thead>
             <tbody>
               {c.platforms.map((p) => {
                 const t = m.top[p.code] ?? [];
@@ -58,7 +58,7 @@ export default async function Market() {
         <section className="card">
           <h2>Share by sub-segment (latest week)</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel</th><th>Sub-segment</th><th className="r">Sprout share</th></tr></thead>
+            <thead><tr><th>Platform</th><th>Sub-segment</th><th className="r">Sprout share</th></tr></thead>
             <tbody>{[...m.subRows].sort((a, b) => a.share - b.share).slice(0, 12).map((r, i) => (
               <tr key={i}><td>{r.name}</td><td>{r.sub}</td><td className="r">{pct(r.share)}</td></tr>
             ))}</tbody>
@@ -68,12 +68,12 @@ export default async function Market() {
         <section className="card">
           <h2>Assortment gaps</h2>
           <div className="tablewrap"><table>
-            <thead><tr><th>Channel</th><th>Sprout SKUs not listed</th></tr></thead>
+            <thead><tr><th>Platform</th><th>Sprout SKUs not listed</th></tr></thead>
             <tbody>{m.gaps.map((g) => (
               <tr key={g.code}><td><b>{g.name}</b></td><td>{g.missing.length ? g.missing.join(", ") : <Pill tone="good">Full range</Pill>}</td></tr>
             ))}</tbody>
           </table></div>
-          <div className="muted">Quick-commerce channels carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
+          <div className="muted">Quick-commerce platforms carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
         </section>
       </div>
       <AnalyzeButton module="market" canRefresh={s.role === "admin"} title="Claude recommends: segment share" />
