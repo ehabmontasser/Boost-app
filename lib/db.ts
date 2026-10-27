@@ -23,9 +23,11 @@ async function pool(): Promise<Pool> {
     g.__boostPool = new PoolCtor({
       connectionString: url,
       ssl: { rejectUnauthorized: false },
-      max: 3,
+      // pages and the AI agents can run many queries at once in one server (agent tools run in parallel):
+      // a few more connections, and wait longer for a free one before failing
+      max: 6,
       idleTimeoutMillis: 10_000,
-      connectionTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 30_000,
     }) as Pool;
   }
   return g.__boostPool;

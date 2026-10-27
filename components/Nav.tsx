@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useAsk } from "./AskProvider";
 
 const brandLinks = [
   ["/overview", "Overview"], ["/replenishment", "Replenishment"], ["/ads", "Ads budget"],
@@ -11,6 +12,9 @@ const adminLinks = [["/admin/upload", "Upload center"], ["/admin/log", "Ingestio
 
 export default function Nav({ admin }: { admin: boolean }) {
   const path = usePathname();
+  const ask = useAsk();
+  // Ask BOOST keeps working in the background: show its state next to the link
+  const badge = (href: string) => href !== "/ask" || !ask ? null : ask.busy ? <span className="navbadge busy">working</span> : ask.unseen ? <span className="navbadge">new</span> : null;
   // keep the chosen reporting period when moving between dashboards
   const sp = useSearchParams();
   const keep = new URLSearchParams();
@@ -25,7 +29,7 @@ export default function Nav({ admin }: { admin: boolean }) {
       ))}
       <div className="group">AI agents</div>
       {agentLinks.map(([href, label]) => (
-        <Link key={href} href={href} className={cls(href)}>{label}</Link>
+        <Link key={href} href={href} className={cls(href)}>{label}{badge(href)}</Link>
       ))}
       {admin ? <div className="group">Admin</div> : null}
       {admin ? adminLinks.map(([href, label]) => (
