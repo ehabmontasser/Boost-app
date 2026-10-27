@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { cookieName, readToken } from "@/lib/auth";
+import { canWrite, cookieName, readToken } from "@/lib/auth";
 import { newState, runSteps, verifyState, type AgentState, type ReviewTask } from "@/lib/agent/engine";
 import { agentDates, NOTES_MAX, saveReport } from "@/lib/agent/context";
 import { dataRange } from "@/lib/queries";
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const store = await cookies();
   const session = readToken(store.get(cookieName)?.value);
   if (!session) return NextResponse.json({ ok: false, error: "Please sign in again." }, { status: 401 });
-  if (session.role !== "admin") return NextResponse.json({ ok: false, error: "Only the account manager can run a business review." }, { status: 403 });
+  if (!canWrite(session)) return NextResponse.json({ ok: false, error: "Only an account manager can run a business review." }, { status: 403 });
   let body: { state?: AgentState; sig?: string; tools?: number; start?: { view?: string; p?: string; notes?: string } } = {};
   try { body = await req.json(); } catch { /* empty */ }
   const dates = await agentDates();

@@ -1,4 +1,5 @@
 import { replenishmentModel } from "@/lib/metrics";
+import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { periodQuery } from "@/lib/period";
 import { dateLabel, egp, int, pct } from "@/lib/format";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function Replenishment({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
   const m = c && p ? await replenishmentModel(c, p) : null;
-  if (!c || !p || !m) return (<><Header title="Replenishment" /><Empty admin={s.role === "admin"} /></>);
+  if (!c || !p || !m) return (<><Header title="Replenishment" /><Empty admin={canWrite(s)} /></>);
   const worstOver = m.overstock[0];
   const unitsAtRisk = m.atRisk.reduce((a, r) => a + r.unitsAtRisk, 0);
   return (
@@ -91,7 +92,7 @@ export default async function Replenishment({ searchParams }: { searchParams: Se
           </table></div>
         </section>
       </div>
-      <AnalyzeButton key={periodQuery(p)} module="replenishment" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: stock, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="replenishment" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: stock, ${p.short}`} />
     </>
   );
 }

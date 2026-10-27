@@ -44,6 +44,13 @@ export default function ReportPanel({ report, items, admin, brand, notesMax }: {
         </label>
         <button type="button" className="btn ghost" onClick={() => window.print()}>Download PDF</button>
       </div>
+      {/* BOOST brand bar and footer: shown only in the PDF */}
+      <div className="print-only print-bar" aria-hidden="true">
+        <span className="pb-logo"><svg width="16" height="16" viewBox="0 0 22 22"><path d="M3 17 L9 10 L13 13 L19 4" fill="none" stroke="#101923" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+        <span className="pb-name">BOOST</span>
+        <span className="pb-right">{type} · {brand}</span>
+      </div>
+      <div className="print-only print-foot" aria-hidden="true">Prepared with BOOST · {brand} · {type}, {report.label} · Confidential, for {brand} only</div>
       <div className="report-head">
         <div className="report-kicker">{brand} · {type}</div>
         <h2 className="report-title">{report.label}</h2>

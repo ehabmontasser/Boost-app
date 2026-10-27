@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canWrite } from "@/lib/auth";
 import { overviewModel } from "@/lib/metrics";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { dayLabel, pctChange, periodQuery, trendLabel, vsShort } from "@/lib/period";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Overview({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Overview" /><Empty admin={s.role === "admin"} /></>);
+  if (!c || !p) return (<><Header title="Overview" /><Empty admin={canWrite(s)} /></>);
   const m = await overviewModel(c, p);
   const vs = vsShort(p);
   const change = (now: number, before: number | null | undefined) => { const t = pctChange(now, before); return t ? `${t} ${vs}` : ""; };
@@ -67,7 +68,7 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
         </div>
         <div className="muted">Go deeper: <Link href={`/replenishment?${periodQuery(p)}`} className="info">Replenishment</Link> · <Link href={`/ads?${periodQuery(p)}`} className="info">Ads budget</Link> · <Link href={`/promotions?${periodQuery(p)}`} className="info">Promotions</Link> · <Link href={`/market?${periodQuery(p)}`} className="info">Market segment share</Link></div>
       </section>
-      <AnalyzeButton key={periodQuery(p)} module="overview" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`What Claude flags across all platforms, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="overview" query={periodQuery(p)} canRefresh={canWrite(s)} title={`What Claude flags across all platforms, ${p.short}`} />
     </>
   );
 }

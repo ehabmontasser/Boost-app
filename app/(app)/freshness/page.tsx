@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/auth";
+import { requireSession, canWrite } from "@/lib/auth";
 import { getCtx } from "@/lib/metrics";
 import { freshness } from "@/lib/queries";
 import spec from "@/lib/spec.json";
@@ -14,7 +14,7 @@ const TITLES = spec.feeds as Record<string, { title: string; freq: string }>;
 export default async function Freshness() {
   const s = await requireSession();
   const c = await getCtx();
-  if (!c) return (<><Header title="Data freshness" /><Empty admin={s.role === "admin"} /></>);
+  if (!c) return (<><Header title="Data freshness" /><Empty admin={canWrite(s)} /></>);
   const rows = await freshness(c.brandId);
   const newest = rows.reduce((m, r) => (r.through_date > m ? r.through_date : m), "");
   return (

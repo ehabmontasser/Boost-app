@@ -1,4 +1,5 @@
 import { marketModel } from "@/lib/metrics";
+import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { periodQuery, trendLabel, vsShort } from "@/lib/period";
 import { dateLabel, egp, pct } from "@/lib/format";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Market({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Market segment share" /><Empty admin={s.role === "admin"} /></>);
+  if (!c || !p) return (<><Header title="Market segment share" /><Empty admin={canWrite(s)} /></>);
   const m = await marketModel(c, p);
   // movement against the previous period (or the period's first week, for the full period)
   const move = (x: { now: number | null; base: number | null }) => (x.now ?? 0) - (x.base ?? 0);
@@ -84,7 +85,7 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
           <div className="muted">Quick-commerce platforms carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
         </section>
       </div>
-      <AnalyzeButton key={periodQuery(p)} module="market" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: segment share, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="market" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: segment share, ${p.short}`} />
     </>
   );
 }

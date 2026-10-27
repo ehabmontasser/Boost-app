@@ -30,13 +30,13 @@ const store = (s: Saved) => { try { sessionStorage.setItem(KEY, JSON.stringify(s
 
 /** Holds the Ask BOOST conversation for the whole app, so an answer keeps running while the user visits other pages.
  *  Lives in the app layout, which stays mounted across page changes; also kept in sessionStorage so a reload resumes. */
-export default function AskProvider({ role, perSession, children }: { role: string; perSession: number; children: ReactNode }) {
+export default function AskProvider({ role, capped, perSession, children }: { role: string; capped: boolean; perSession: number; children: ReactNode }) {
   const path = usePathname();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
-  const [remaining, setRemaining] = useState<number | null>(role === "admin" ? null : perSession);
+  const [remaining, setRemaining] = useState<number | null>(capped ? perSession : null);
   const [unseen, setUnseen] = useState(false);
-  const saved = useRef<Saved>({ role, turns: [], conv: null, remaining: role === "admin" ? null : perSession, pending: null });
+  const saved = useRef<Saved>({ role, turns: [], conv: null, remaining: capped ? perSession : null, pending: null });
   const running = useRef(false);
   const pathRef = useRef(path);
   pathRef.current = path;

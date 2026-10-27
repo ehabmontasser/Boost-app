@@ -1,5 +1,6 @@
 import spec from "./spec.json";
 import { q, withTx } from "./db";
+import { getBrand } from "./queries";
 import { readWorkbook } from "./xlsx";
 import { readMeta, parseFeedFile, parseSetupFile, toDbRows } from "./validate";
 import { FEED_TABLES, MARKET_CATEGORY, SETUP_ORDER, SETUP_TABLES, upsertSql, TableMap, platformCode } from "./mapping";
@@ -41,10 +42,13 @@ async function logIngestion(
   }
 }
 
+/** Uploads go to the brand the user is working on. */
 export async function getBrandId(): Promise<string | null> {
-  const r = await q<{ id: string }>("SELECT id FROM brands ORDER BY created_at LIMIT 1");
-  return r[0]?.id ?? null;
+  return (await getBrand())?.id ?? null;
 }
+
+/** Who may load which Brand Master: null = any brand, including a new one (the owner); otherwise these brand codes. */
+export type ImportOptions = { allowedBrandCodes: string[] | null };
 
 export async function importFeed(buf: Buffer, fileName: string, slotPlatform: string, slotFeed: string): Promise<ImportResult> {
   let sheets;
@@ -55,6 +59,10 @@ export async function importFeed(buf: Buffer, fileName: string, slotPlatform: st
   const brandId = await getBrandId();
   if (parsed.errors.length) return rejected(slotPlatform, slotFeed, fileName, brandId, parsed.errors, parsed.warnings, parsed.meta, parsed);
   if (!brandId) return rejected(slotPlatform, slotFeed, fileName, null, ["Upload the Brand Master (00 Setup) first. Other files are rejected until it exists."]);
+  // a file meant for another brand must never land in this one
+  const current = await getBrand();
+  if (current && parsed.meta.brand && parsed.meta.brand.trim() !== current.name)
+    return rejected(slotPlatform, slotFeed, fileName, brandId, [`V01: this file is for ${parsed.meta.brand}, but you are working on ${current.name}. Switch brand in the sidebar, then upload it again.`], parsed.warnings, parsed.meta, parsed);
 
   // V06: platform_sku_id must exist in Brand Master > Platform_Listings (unknown ids go to the mapping queue, file still imports)
   const warnings = [...parsed.warnings];
@@ -96,7 +104,7 @@ export async function importFeed(buf: Buffer, fileName: string, slotPlatform: st
   };
 }
 
-export async function importSetup(buf: Buffer, fileName: string): Promise<ImportResult> {
+export async function importSetup(buf: Buffer, fileName: string, opts: ImportOptions = { allowedBrandCodes: null }): Promise<ImportResult> {
   let sheets;
   try { sheets = readWorkbook(buf); }
   catch (e) { return rejected("All", "SETUP", fileName, null, [`V00: could not read the file as .xlsx (${(e as Error).message})`]); }
@@ -105,7 +113,10 @@ export async function importSetup(buf: Buffer, fileName: string): Promise<Import
 
   const brandName = parsed.meta.brand || "Brand";
   const code = brandName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "brand";
+  if (opts.allowedBrandCodes && !opts.allowedBrandCodes.includes(code))
+    return rejected("All", "SETUP", fileName, await getBrandId(), [`This Brand Master is for ${brandName}, which is not one of your brands. Only the owner can add a new brand.`], parsed.warnings, parsed.meta);
   let total = 0;
+  let loadedId: string | null = null;
   try {
     await withTx(async (c) => {
       const r = (await c.query(
@@ -113,6 +124,7 @@ export async function importSetup(buf: Buffer, fileName: string): Promise<Import
         [code, brandName],
       )) as { rows: { id: string }[] };
       const brandId = r.rows[0].id;
+      loadedId = brandId;
       for (const sheet of SETUP_ORDER) {
         const rows = parsed.tables[sheet] ?? [];
         if (!rows.length) continue;
@@ -123,7 +135,7 @@ export async function importSetup(buf: Buffer, fileName: string): Promise<Import
   } catch (e) {
     return rejected("All", "SETUP", fileName, await getBrandId(), [`Database error, nothing was imported: ${(e as Error).message}`], parsed.warnings, parsed.meta);
   }
-  const brandId = await getBrandId();
+  const brandId = loadedId;
   const status = parsed.warnings.length ? "imported_with_warnings" : "imported";
   await logIngestion("All", "SETUP", fileName, parsed.meta.template_id ?? null, null, null, status, total, [], parsed.warnings, brandId);
   return { status, rows: total, errors: [], warnings: parsed.warnings, message: `${fileName}: Brand Master loaded for ${brandName} (${total} rows across ${Object.keys(parsed.tables).length} tabs).` };
@@ -140,7 +152,7 @@ async function rejected(
 export const platformNames = Object.keys(spec.platforms);
 
 /** Routes a file by its Meta tab: the Brand Master, or a platform card. Used by the bulk upload. */
-export async function importAuto(buf: Buffer, fileName: string): Promise<ImportResult & { slot: string }> {
+export async function importAuto(buf: Buffer, fileName: string, opts: ImportOptions = { allowedBrandCodes: null }): Promise<ImportResult & { slot: string }> {
   let sheets;
   try { sheets = readWorkbook(buf); }
   catch (e) {
@@ -148,7 +160,7 @@ export async function importAuto(buf: Buffer, fileName: string): Promise<ImportR
   }
   const meta = readMeta(sheets);
   const tid = meta.template_id ?? "";
-  if (tid === "BOOST-SETUP-v1.0") return { ...(await importSetup(buf, fileName)), slot: "Brand Master" };
+  if (tid === "BOOST-SETUP-v1.0") return { ...(await importSetup(buf, fileName, opts)), slot: "Brand Master" };
   const m = /^BOOST-([A-Z_]+)-v1\.0$/.exec(tid);
   const feed = m?.[1];
   const platform = meta.platform;

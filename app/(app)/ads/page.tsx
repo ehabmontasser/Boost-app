@@ -1,4 +1,5 @@
 import { adsModel } from "@/lib/metrics";
+import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Ads({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Ads budget" /><Empty admin={s.role === "admin"} /></>);
+  if (!c || !p) return (<><Header title="Ads budget" /><Empty admin={canWrite(s)} /></>);
   const m = await adsModel(c, p);
   const vs = vsShort(p);
   const suppressed = m.suppressed.reduce((a, x) => a + x.spend, 0);
@@ -59,7 +60,7 @@ export default async function Ads({ searchParams }: { searchParams: SearchParams
           <div className="muted">Spend on days when the listing was suppressed on the platform. It buys nothing, so pause the campaign until the listing is back.</div>
         </section>
       ) : null}
-      <AnalyzeButton key={periodQuery(p)} module="ads" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: ads budget, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="ads" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: ads budget, ${p.short}`} />
     </>
   );
 }

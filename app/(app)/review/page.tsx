@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/auth";
+import { canWrite, requireSession } from "@/lib/auth";
 import { getReport, listReports, NOTES_MAX } from "@/lib/agent/context";
 import { dataRange, getBrand } from "@/lib/queries";
 import { addDays, periodOptions } from "@/lib/period";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function BusinessReview({ searchParams }: { searchParams: Promise<{ report?: string }> }) {
   const s = await requireSession();
-  const admin = s.role === "admin";
+  const admin = canWrite(s);
   const brand = await getBrand();
   const { report: reportId } = await searchParams;
   const [items, report, span] = brand

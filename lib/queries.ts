@@ -5,9 +5,18 @@ import type { Range } from "./period";
 export type Platform = { code: string; name: string; channel_type: string; status: string; sort: number };
 export type Brand = { id: string; name: string };
 
+/** The brand the signed-in user is working on (see lib/access.ts). Outside a web request (test scripts) there is no
+ *  user, so the first brand is used; any other error is raised, never answered with another brand's data. */
 export async function getBrand(): Promise<Brand | null> {
-  const r = await q<Brand>("SELECT id, name FROM brands ORDER BY created_at LIMIT 1");
-  return r[0] ?? null;
+  try {
+    const { currentBrand } = await import("./access");
+    const b = await currentBrand();
+    return b ? { id: b.id, name: b.name } : null;
+  } catch (e) {
+    if (!/outside a request scope|request scope/i.test((e as Error).message)) throw e;
+    const r = await q<Brand>("SELECT id, name FROM brands ORDER BY created_at LIMIT 1");
+    return r[0] ?? null;
+  }
 }
 
 export async function getPlatforms(): Promise<Platform[]> {

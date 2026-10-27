@@ -1,4 +1,5 @@
 import { promoModel } from "@/lib/metrics";
+import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { periodQuery } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Promotions({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Promotions" /><Empty admin={s.role === "admin"} /></>);
+  if (!c || !p) return (<><Header title="Promotions" /><Empty admin={canWrite(s)} /></>);
   const m = await promoModel(c, p);
   const worst = m.rows[0], best = m.rows[m.rows.length - 1];
   return (
@@ -46,7 +47,7 @@ export default async function Promotions({ searchParams }: { searchParams: Searc
         </div>
         {best ? <div className="muted">Best: {best.name}, {best.promo}, {egp(best.effect, false)}. Deep discounts paid fully by the brand lift volume but cost more than the extra units earn. Shared or platform-funded deals pay.</div> : null}
       </section>
-      <AnalyzeButton key={periodQuery(p)} module="promotions" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: promotions and discounts, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="promotions" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: promotions and discounts, ${p.short}`} />
     </>
   );
 }

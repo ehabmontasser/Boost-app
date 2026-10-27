@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireWriter } from "@/lib/auth";
 import { getBrand, getPlatforms, freshness } from "@/lib/queries";
 import spec from "@/lib/spec.json";
 import { dateLabel } from "@/lib/format";
@@ -11,7 +11,7 @@ const FEEDS = spec.feed_order as string[];
 const TITLES = spec.feeds as Record<string, { title: string; freq: string }>;
 
 export default async function Upload() {
-  await requireAdmin();
+  await requireWriter();
   const brand = await getBrand();
   const platforms = (await getPlatforms()).filter((p) => p.status === "active");
   const rows = brand ? await freshness(brand.id) : [];

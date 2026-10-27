@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createHmac } from "node:crypto";
-import { cookieName, readToken } from "@/lib/auth";
+import { askCapped, cookieName, readToken } from "@/lib/auth";
 import { newState, runSteps, verifyState, type AgentState } from "@/lib/agent/engine";
 import { agentDates, demoQuestionsToday, DEMO_PER_DAY, DEMO_PER_SESSION, logQuestion } from "@/lib/agent/context";
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const question = (body.question ?? "").trim();
   if (question) {
     if (body.state && !body.state.done) return NextResponse.json({ ok: false, error: "Wait for the current answer first." }, { status: 400 });
-    if (session.role !== "admin") {
+    if (askCapped(session)) {
       if (asked >= DEMO_PER_SESSION) return NextResponse.json({ ok: false, error: `The demo allows ${DEMO_PER_SESSION} questions per visit.` }, { status: 429 });
       if ((await demoQuestionsToday(dates.brandId)) >= DEMO_PER_DAY) return NextResponse.json({ ok: false, error: "The demo has reached today's question limit. Please try again tomorrow." }, { status: 429 });
       asked += 1;
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
 
   try {
     const res = await runSteps(state, dates.dataThrough, dates.latestWeek);
-    const out = NextResponse.json({ ok: !res.error, ...res, remaining: session.role === "admin" ? null : DEMO_PER_SESSION - asked });
-    if (question && session.role !== "admin") out.cookies.set(ASK_COOKIE, signCount(asked, token ?? ""), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 12 });
+    const out = NextResponse.json({ ok: !res.error, ...res, remaining: askCapped(session) ? DEMO_PER_SESSION - asked : null });
+    if (question && askCapped(session)) out.cookies.set(ASK_COOKIE, signCount(asked, token ?? ""), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 12 });
     return out;
   } catch (e) {
     return NextResponse.json({ ok: false, error: `Ask failed: ${(e as Error).message}` }, { status: 500 });

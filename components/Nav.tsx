@@ -10,8 +10,9 @@ const brandLinks = [
 ] as const;
 const agentLinks = [["/review", "Business Review"], ["/ask", "Ask BOOST"]] as const;
 const adminLinks = [["/admin/upload", "Upload center"], ["/admin/log", "Ingestion log"]] as const;
+const ownerLinks = [["/admin/users", "Users"]] as const;
 
-export default function Nav({ admin }: { admin: boolean }) {
+export default function Nav({ writer, owner }: { writer: boolean; owner: boolean }) {
   const path = usePathname();
   const ask = useAsk();
   const review = useReview();
@@ -36,8 +37,11 @@ export default function Nav({ admin }: { admin: boolean }) {
       {agentLinks.map(([href, label]) => (
         <Link key={href} href={href} className={cls(href)}>{label}{badge(href)}</Link>
       ))}
-      {admin ? <div className="group">Admin</div> : null}
-      {admin ? adminLinks.map(([href, label]) => (
+      {writer ? <div className="group">Admin</div> : null}
+      {writer ? adminLinks.map(([href, label]) => (
+        <Link key={href} href={href} className={cls(href)}>{label}</Link>
+      )) : null}
+      {owner ? ownerLinks.map(([href, label]) => (
         <Link key={href} href={href} className={cls(href)}>{label}</Link>
       )) : null}
     </nav>

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireWriter } from "@/lib/auth";
 import { getBrand, ingestionLog, mappingQueue } from "@/lib/queries";
 import { Header, Pill } from "@/components/ui";
 
@@ -11,7 +11,7 @@ function list(v: unknown): string[] {
 }
 
 export default async function Log() {
-  await requireAdmin();
+  await requireWriter();
   const brand = await getBrand();
   const log = brand ? await ingestionLog(brand.id) : [];
   const queue = brand ? await mappingQueue(brand.id) : [];

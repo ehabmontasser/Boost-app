@@ -17,17 +17,20 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
             Stock, ads, promotions and segment share across e-commerce and quick-commerce platforms, with a clear next action.
           </p>
         </div>
-        <form action="/api/demo" method="post">
-          <button className="btn" type="submit">Open the demo brand (read only)</button>
-          <div className="muted">Sprout Baby Care, a dummy brand with synthetic data.</div>
+        <form action="/api/login" method="post">
+          <label htmlFor="email" style={{ fontWeight: 600, fontSize: 14 }}>Sign in</label>
+          <input id="email" name="email" type="text" className="input" placeholder="Email" autoComplete="username" required />
+          <input id="pw" name="password" type="password" className="input" placeholder="Password" autoComplete="current-password" required aria-label="Password" />
+          {e ? <div className="notice n-bad">That email and password do not match an active account.</div> : null}
+          <button className="btn" type="submit">Sign in</button>
         </form>
         <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
-        <form action="/api/login" method="post">
-          <label htmlFor="pw" style={{ fontWeight: 600, fontSize: 14 }}>Account manager sign in</label>
-          <input id="pw" name="password" type="password" className="input" placeholder="Password" autoComplete="current-password" required />
-          {e ? <div className="notice n-bad">That password is not correct.</div> : null}
-          <button className="btn alt" type="submit">Sign in</button>
-        </form>
+        <div className="demo-buttons">
+          <div style={{ fontWeight: 600, fontSize: 14 }}>Try the demo (read only)</div>
+          <form action="/api/demo?as=manager" method="post"><button className="btn alt" type="submit">Demo: account manager</button></form>
+          <form action="/api/demo?as=brand" method="post"><button className="btn alt" type="submit">Demo: Sprout brand user</button></form>
+          <div className="muted">Sprout Baby Care is a dummy brand with synthetic data.</div>
+        </div>
       </div>
     </div>
   );
