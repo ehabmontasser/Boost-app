@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 
 export default async function Promotions({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Promotions" /><Empty admin={canWrite(s)} /></>);
+  if (!c || !p) return (<><Header title="Deals and Promotions" /><Empty admin={canWrite(s)} /></>);
   const m = await promoModel(c, p);
   const worst = m.rows[0], best = m.rows[m.rows.length - 1];
   return (
     <>
-      <Header title="Promotions" sub={`Promotions running in ${p.label} · each run compared with the 14 days before it, after platform margin, cost of goods and the brand-funded discount`}>
+      <Header title="Deals and Promotions" sub={`Promotions running in ${p.label} · each run compared with the 14 days before it, after platform margin, cost of goods and the brand-funded discount`}>
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
@@ -47,7 +47,7 @@ export default async function Promotions({ searchParams }: { searchParams: Searc
         </div>
         {best ? <div className="muted">Best: {best.name}, {best.promo}, {egp(best.effect, false)}. Deep discounts paid fully by the brand lift volume but cost more than the extra units earn. Shared or platform-funded deals pay.</div> : null}
       </section>
-      <AnalyzeButton key={periodQuery(p)} module="promotions" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: promotions and discounts, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="promotions" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: deals and promotions, ${p.short}`} />
     </>
   );
 }

@@ -12,12 +12,12 @@ export const dynamic = "force-dynamic";
 export default async function Replenishment({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
   const m = c && p ? await replenishmentModel(c, p) : null;
-  if (!c || !p || !m) return (<><Header title="Replenishment" /><Empty admin={canWrite(s)} /></>);
+  if (!c || !p || !m) return (<><Header title="Inventory Management" /><Empty admin={canWrite(s)} /></>);
   const worstOver = m.overstock[0];
   const unitsAtRisk = m.atRisk.reduce((a, r) => a + r.unitsAtRisk, 0);
   return (
     <>
-      <Header title="Replenishment" sub={`Stock position on ${dateLabel(m.asOf)} (last day of ${p.view === "year" ? "the period" : p.short}) · lost demand and POs for ${p.label} · cover = on hand / average daily sales of the 14 days before`}>
+      <Header title="Inventory Management" sub={`Stock position on ${dateLabel(m.asOf)} (last day of ${p.view === "year" ? "the period" : p.short}) · lost demand and POs for ${p.label} · cover = on hand / average daily sales of the 14 days before`}>
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
@@ -92,7 +92,7 @@ export default async function Replenishment({ searchParams }: { searchParams: Se
           </table></div>
         </section>
       </div>
-      <AnalyzeButton key={periodQuery(p)} module="replenishment" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: stock, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="replenishment" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: inventory management, ${p.short}`} />
     </>
   );
 }

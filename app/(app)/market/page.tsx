@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Market({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Market segment share" /><Empty admin={canWrite(s)} /></>);
+  if (!c || !p) return (<><Header title="Market Share" /><Empty admin={canWrite(s)} /></>);
   const m = await marketModel(c, p);
   // movement against the previous period (or the period's first week, for the full period)
   const move = (x: { now: number | null; base: number | null }) => (x.now ?? 0) - (x.base ?? 0);
@@ -24,7 +24,7 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
   const latest = m.latestWeek ? `week of ${dateLabel(m.latestWeek)}` : "latest week";
   return (
     <>
-      <Header title="Market segment share" sub={`Sprout's share of each platform's segment sales · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""}`}>
+      <Header title="Market Share" sub={`Sprout's share of each platform's segment sales · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""}`}>
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
@@ -85,7 +85,7 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
           <div className="muted">Quick-commerce platforms carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
         </section>
       </div>
-      <AnalyzeButton key={periodQuery(p)} module="market" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: segment share, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="market" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: market share, ${p.short}`} />
     </>
   );
 }

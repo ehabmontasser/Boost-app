@@ -249,14 +249,17 @@ export async function replenishmentModel(c: Ctx, p: Period) {
     const net = num(sales.find((s) => s.platform === pl.code)?.net), lv = num(lostP.find((l) => l.platform === pl.code)?.value);
     return { code: pl.code, name: pl.name, net, lostValue: lv, lostPct: net ? lv / net : 0 };
   });
-  const lostTop = lostSku.map((l) => ({ platform: l.platform, name: c.nameOf(l.platform), sku: c.skuOf(l.platform, l.platform_sku_id) ?? l.platform_sku_id, value: num(l.value), units: num(l.units), inStock: num(l.op_hours) ? 1 - num(l.oos_hours) / num(l.op_hours) : 1 }))
-    .filter((l) => l.value > 0).map((l) => ({ ...l, skuName: c.skuName(l.sku) })).sort((a, b) => b.value - a.value).slice(0, 8);
+  const lostAll = lostSku.map((l) => ({ platform: l.platform, name: c.nameOf(l.platform), sku: c.skuOf(l.platform, l.platform_sku_id) ?? l.platform_sku_id, value: num(l.value), units: num(l.units), inStock: num(l.op_hours) ? 1 - num(l.oos_hours) / num(l.op_hours) : 1 }))
+    .filter((l) => l.value > 0).map((l) => ({ ...l, skuName: c.skuName(l.sku) })).sort((a, b) => b.value - a.value);
+  const lostTop = lostAll.slice(0, 8);
   const poRows = po.map((x) => ({ platform: x.platform, name: c.nameOf(x.platform), sku: c.skuOf(x.platform, x.platform_sku_id) ?? x.platform_sku_id,
     confirmRate: num(x.requested) ? num(x.confirmed) / num(x.requested) : null, lead: num(x.lead), requested: num(x.requested) }))
     .filter((x) => x.confirmRate !== null && x.requested > 0).map((x) => ({ ...x, skuName: c.skuName(x.sku) }));
   const lowestConfirm = [...poRows].sort((a, b) => (a.confirmRate ?? 1) - (b.confirmRate ?? 1)).slice(0, 5);
   return {
     asOf, atRisk: rows.filter((r) => r.status === "At risk"), action: action.slice(0, 14), overstock, channel, lostTop, lowestConfirm,
+    // full lists, for the Platform Analysis page (one platform at a time)
+    actionAll: action, lostAll, poAll: [...poRows].sort((a, b) => (a.confirmRate ?? 1) - (b.confirmRate ?? 1)),
     totalLost: channel.reduce((a, x) => a + x.lostValue, 0), totalNet: channel.reduce((a, x) => a + x.net, 0),
   };
 }

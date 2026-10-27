@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   try {
     // Only the admin can force a fresh (paid) call; everyone else gets the saved answer when there is one.
     const q = Object.fromEntries(new URLSearchParams(typeof body.query === "string" ? body.query : ""));
-    const res = await analyze(body.module as ModuleName, !!body.force && canWrite(session), { view: q.view, p: q.p, from: q.from, to: q.to, cmp: q.cmp });
+    const res = await analyze(body.module as ModuleName, !!body.force && canWrite(session), { view: q.view, p: q.p, from: q.from, to: q.to, cmp: q.cmp }, q.platform);
     return NextResponse.json(res);
   } catch (e) {
     return NextResponse.json({ ok: false, error: `Analysis failed: ${(e as Error).message}` }, { status: 500 });

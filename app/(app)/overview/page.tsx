@@ -66,7 +66,7 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
             </tbody>
           </table>
         </div>
-        <div className="muted">Go deeper: <Link href={`/replenishment?${periodQuery(p)}`} className="info">Replenishment</Link> · <Link href={`/ads?${periodQuery(p)}`} className="info">Ads budget</Link> · <Link href={`/promotions?${periodQuery(p)}`} className="info">Promotions</Link> · <Link href={`/market?${periodQuery(p)}`} className="info">Market segment share</Link></div>
+        <div className="muted">Go deeper: <Link href={`/replenishment?${periodQuery(p)}`} className="info">Inventory Management</Link> · <Link href={`/ads?${periodQuery(p)}`} className="info">Performance Marketing</Link> · <Link href={`/promotions?${periodQuery(p)}`} className="info">Deals and Promotions</Link> · <Link href={`/market?${periodQuery(p)}`} className="info">Market Share</Link></div>
       </section>
       <AnalyzeButton key={periodQuery(p)} module="overview" query={periodQuery(p)} canRefresh={canWrite(s)} title={`What Claude flags across all platforms, ${p.short}`} />
     </>

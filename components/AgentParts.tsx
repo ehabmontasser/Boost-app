@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import type { Brief, Step } from "@/lib/agent/engine";
 
 const TOOL_NAMES: Record<string, string> = {
-  get_overview: "Read Overview", get_replenishment: "Checked Replenishment", get_ads: "Checked Ads budget",
-  get_promotions: "Checked Promotions", get_market: "Checked Market share", get_product_view: "Joined products across screens",
+  get_overview: "Read Overview", get_replenishment: "Checked Inventory Management", get_ads: "Checked Performance Marketing",
+  get_promotions: "Checked Deals and Promotions", get_market: "Checked Market share", get_product_view: "Joined products across screens",
   submit_brief: "Wrote the brief",
 };
 

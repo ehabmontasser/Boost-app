@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PeriodOptions } from "@/lib/period";
 
 const VIEWS = [["week", "Weekly"], ["month", "Monthly"], ["quarter", "Quarterly"], ["ytd", "YTD"], ["custom", "Custom"], ["year", "Full period"]] as const;
@@ -12,12 +12,15 @@ export default function PeriodPicker({ view, periodKey, from, to, cmp, options }
 }) {
   const router = useRouter();
   const path = usePathname();
+  // pages with their own choice in the URL (Platform Analysis) keep it when the period changes
+  const platform = useSearchParams().get("platform");
   const [cf, setCf] = useState(from);
   const [ct, setCt] = useState(to);
   const go = (v: string, extra: Record<string, string | undefined>, c = cmp) => {
     const q = new URLSearchParams({ view: v });
     for (const [k, x] of Object.entries(extra)) if (x) q.set(k, x);
     if (c === "yoy") q.set("cmp", "yoy");
+    if (platform) q.set("platform", platform);
     router.push(`${path}?${q.toString()}`);
   };
   const latest = (v: string) => (v === "week" ? options.week[0]?.key : v === "month" ? options.month[0]?.key : v === "quarter" ? options.quarter[0]?.key : undefined);

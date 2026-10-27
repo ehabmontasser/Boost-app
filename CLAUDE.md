@@ -24,8 +24,8 @@ Deliverables: (1) published working MVP link, (2) 1-3 minute walkthrough video. 
 ## Scope
 Channels: Talabat Mart, Noon, Amazon Core (e-commerce), Amazon Now (quick commerce), Breadfast. Rabbit is pending (status awaiting_data). Jumia dropped.
 Amazon Core and Amazon Now are two separate platforms (codes AMAZON and AMAZON_NOW). Shelf capacity is ignored in the database.
-Four decision modules: Stock replenishment; Ads budget; Promotions and discounts; Market Segment Share (formerly "Must Stock list").
-Screens: Overview, Replenishment, Ads budget, Promotions, Market segment share, Data freshness, AI agents (Business Review, Ask BOOST), Admin Upload center, Admin Ingestion log.
+Four decision modules (pillars), as named in the app: Inventory Management (`/replenishment`), Performance Marketing (`/ads`), Deals and Promotions (`/promotions`), Market Share (`/market`). The URLs and code names kept the old module names.
+Screens: Overview, Platform Analysis (`/platform?platform=CODE`: one platform across the four pillars, with its own Claude analysis, module `platform`), Inventory Management, Performance Marketing, Deals and Promotions, Market Share, Data freshness, AI agents (Business Review, Ask BOOST), Admin Upload center, Admin Ingestion log.
 
 ## Architecture
 - Next.js 15 App Router, React 19, TypeScript, plain CSS tokens (`app/globals.css`). Only runtime deps: next, react, react-dom, pg. No Anthropic SDK: Claude is called with `fetch` (`lib/analyze.ts`).

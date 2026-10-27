@@ -4,7 +4,7 @@ import { q } from "./db";
 import { adsModel, getCtx, marketModel, overviewModel, promoModel, replenishmentModel } from "./metrics";
 import { resolvePeriod, type PeriodQuery } from "./period";
 
-export const MODULES = ["overview", "replenishment", "ads", "promotions", "market"] as const;
+export const MODULES = ["overview", "replenishment", "ads", "promotions", "market", "platform"] as const;
 export type ModuleName = (typeof MODULES)[number];
 
 export type Insight = {
@@ -16,7 +16,7 @@ export type AnalysisResult = { ok: true; insight: Insight | null; raw?: string; 
 
 const r = (n: number, d = 0) => Math.round(n * 10 ** d) / 10 ** d;
 
-export async function payload(module: ModuleName, query: PeriodQuery): Promise<{ brandId: string; data: unknown } | null> {
+export async function payload(module: ModuleName, query: PeriodQuery, platform?: string): Promise<{ brandId: string; data: unknown } | null> {
   const c = await getCtx();
   if (!c || !c.asOf || !c.minDate) return null;
   const p = resolvePeriod(query, c.minDate, c.asOf);
@@ -60,6 +60,46 @@ export async function payload(module: ModuleName, query: PeriodQuery): Promise<{
         brand: c.brandName, period, currency: "EGP ex VAT", method: "Each run of a promotion is compared with the SKU's non-promo days in the 14 days before it. Estimated profit effect = (promo daily units x promo margin - baseline daily units x normal margin) x promo days, after platform margin, COGS and the vendor-funded discount. Runs that overlap the period are counted in full.",
         totals: { dilutive: r(m.dilutive), accretive: r(m.accretive) },
         promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
+      } };
+    }
+    case "platform": {
+      // one platform across the four pillars
+      const pl = c.platforms.find((x) => x.code === platform) ?? c.platforms[0];
+      if (!pl) return null;
+      const [o, rp, ad, pr, mk] = await Promise.all([overviewModel(c, p), replenishmentModel(c, p), adsModel(c, p), promoModel(c, p), marketModel(c, p)]);
+      const ov = o.rows.find((x) => x.code === pl.code);
+      const mine = <T extends { platform: string }>(xs: T[]) => xs.filter((x) => x.platform === pl.code);
+      const camps = mine(ad.rows), promos = mine(pr.rows);
+      const spend = camps.reduce((a, x) => a + x.spend, 0);
+      const share = (xs: { code: string; now: number | null; base: number | null }[]) => { const x = xs.find((y) => y.code === pl.code); return x ? { before: x.base === null ? null : r(x.base, 3), now: x.now === null ? null : r(x.now, 3) } : null; };
+      return { brandId: c.brandId, data: {
+        brand: c.brandName, platform: pl.name, platformType: pl.channel_type, period, currency: "EGP ex VAT",
+        note: "Everything below is for this one platform. Stock position is on the last day of the period. Segment share = the brand's share of all sales in that category on this platform, all brands included (a fraction). ROAS = attributed 7-day sales / ad spend.",
+        sales: ov ? { netSales: r(ov.net), netSalesPreviousPeriod: ov.prevNet === null ? null : r(ov.prevNet), shareOfBrandSales: o.totalNet ? r(ov.net / o.totalNet, 3) : null } : null,
+        inventoryManagement: rp ? {
+          stockPositionOn: rp.asOf,
+          needsAction: mine(rp.actionAll).slice(0, 10).map((x) => ({ node: x.nodeName, sku: x.skuName, status: x.status, onHand: x.onHand, coverDays: r(x.cover, 1), nextPoEta: x.eta, unitsShort: r(x.unitsAtRisk) })),
+          overstock: mine(rp.overstock).slice(0, 5).map((x) => ({ sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover), maxCoverDays: x.maxCover, openPoUnits: x.openPo })),
+          lostDemand: ov ? { egp: r(ov.lostValue), pctOfSales: r(ov.lostPct, 3) } : null,
+          topLostSkus: mine(rp.lostAll).slice(0, 5).map((x) => ({ sku: x.skuName, lostDemandEgp: r(x.value), inStockRate: r(x.inStock, 3) })),
+          lowestPoConfirmation: mine(rp.poAll).slice(0, 5).map((x) => ({ sku: x.skuName, confirmRate: r(x.confirmRate ?? 0, 2), avgLeadTimeDays: r(x.lead, 1) })),
+        } : null,
+        performanceMarketing: {
+          adSpend: r(spend), roas: ov ? r(ov.roas, 2) : null, adSpendPctOfSales: ov ? r(ov.spendPct, 3) : null,
+          campaigns: camps.slice(0, 10).map((x) => ({ campaign: x.campaign, type: x.type, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
+          spendOnSuppressedListings: mine(ad.suppressed).map((x) => r(x.spend))[0] ?? 0,
+        },
+        dealsAndPromotions: {
+          method: "Each run is compared with the SKU's non-promo days in the 14 days before it, after platform margin, COGS and the brand-funded discount.",
+          netProfitEffect: r(promos.reduce((a, x) => a + x.effect, 0)),
+          promotions: promos.map((x) => ({ promo: x.promo, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), brandFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect) })),
+        },
+        marketShare: {
+          wipesSegmentShare: share(mk.wipesNow), skinCareSegmentShare: share(mk.skinNow),
+          topWipesSkusLatestWeek: (mk.top[pl.code] ?? []).slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, own: x.own })),
+          lowestSubSegments: mine(mk.subRows).sort((a, b) => a.share - b.share).slice(0, 5).map((x) => ({ subSegment: x.sub, share: r(x.share, 3) })),
+          brandSkusNotListed: mk.gaps.find((g) => g.code === pl.code)?.missing ?? [],
+        },
       } };
     }
     case "market": {
@@ -129,9 +169,9 @@ function parseInsight(text: string): Insight | null {
   } catch { return null; }
 }
 
-export async function analyze(module: ModuleName, force = false, query: PeriodQuery = {}): Promise<AnalysisResult> {
+export async function analyze(module: ModuleName, force = false, query: PeriodQuery = {}, platform?: string): Promise<AnalysisResult> {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
-  const p = await payload(module, query);
+  const p = await payload(module, query, platform);
   if (!p) return { ok: false, error: "No data to analyse yet. Upload the Brand Master and the platform files first." };
   const body = JSON.stringify(p.data);
   const hash = createHash("sha256").update(PROMPT_VERSION + module + model + body).digest("hex");

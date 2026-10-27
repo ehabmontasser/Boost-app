@@ -24,10 +24,10 @@ const screen = (name: string, description: string) => ({
 
 export const DATA_TOOLS = [
   screen("get_overview", "Overview screen: net sales, ad spend, ROAS, lost demand and wipes segment share per platform for the period, with the comparison period's totals."),
-  screen("get_replenishment", "Replenishment screen: stock position on the last day of the period (nodes at risk with cover days, next PO date and units short; overstocked lines), lost demand per platform and SKU, lowest PO confirmation rates."),
-  screen("get_ads", "Ads budget screen: spend, ROAS vs target, budget-limited campaigns, spend below target and spend on suppressed listings, with the comparison period's spend and ROAS."),
-  screen("get_promotions", "Promotions screen: every promotion running in the period with funding, depth, volume lift and estimated profit effect (each run compared with the 14 days before it)."),
-  screen("get_market", "Market segment share screen: Sprout's wipes and skin care share per platform vs the comparison, top wipes products on each platform, and Sprout SKUs not listed."),
+  screen("get_replenishment", "Inventory Management screen: stock position on the last day of the period (nodes at risk with cover days, next PO date and units short; overstocked lines), lost demand per platform and SKU, lowest PO confirmation rates."),
+  screen("get_ads", "Performance Marketing screen: spend, ROAS vs target, budget-limited campaigns, spend below target and spend on suppressed listings, with the comparison period's spend and ROAS."),
+  screen("get_promotions", "Deals and Promotions screen: every promotion running in the period with funding, depth, volume lift and estimated profit effect (each run compared with the 14 days before it)."),
+  screen("get_market", "Market Share screen: Sprout's wipes and skin care share per platform vs the comparison, top wipes products on each platform, and Sprout SKUs not listed."),
   screen("get_product_view", "One row per platform and Sprout product joining the screens: net sales and change vs the comparison, ad spend and attributed sales with campaign names, stock status on the period's last day (at risk or watch with the worst node, cover days, units short, next PO; or overstock days), promotions running and their profit effect, and lost demand. Use it to find conflicts between screens, e.g. ads or promotions on products that are about to run out or are overstocked."),
 ];
 

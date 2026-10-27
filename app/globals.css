@@ -88,6 +88,15 @@ h2 { font-size: 20px; font-weight: 600; }
 .picker .seg button:focus-visible, .picker select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .picker select { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); max-width: 100%; }
 
+/* Platform Analysis: platform drop-down and pillar headings */
+.platform-pick { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink-2); align-self: flex-start; }
+.platform-pick select { font: inherit; font-size: 15px; font-weight: 600; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); max-width: 100%; }
+.platform-pick select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pillar { display: flex; align-items: center; gap: 10px; margin: 18px 0 2px; flex-wrap: wrap; }
+.pillar h2 { margin: 0; font-size: 20px; }
+.pillar .info { margin-left: auto; font-size: 13px; }
+.pillar-n { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; }
+
 /* Info icon and its explanation bubble */
 .infotip { position: relative; display: inline-flex; align-items: center; }
 .infotip-btn { all: unset; display: inline-flex; color: var(--muted); cursor: pointer; border-radius: 50%; padding: 2px; }
@@ -112,6 +121,7 @@ h2 { font-size: 20px; font-weight: 600; }
 
 .tablewrap { overflow-x: auto; }
 table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
+table.fit { min-width: 0; }
 th { text-align: left; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td { padding: 12px 8px; border-bottom: 1px solid #eef1f4; vertical-align: top; }
 tr:last-child td { border-bottom: 0; }

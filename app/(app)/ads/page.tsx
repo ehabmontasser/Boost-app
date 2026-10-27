@@ -11,14 +11,14 @@ export const dynamic = "force-dynamic";
 
 export default async function Ads({ searchParams }: { searchParams: SearchParams }) {
   const { s, c, p, options } = await pageCtx(searchParams);
-  if (!c || !p) return (<><Header title="Ads budget" /><Empty admin={canWrite(s)} /></>);
+  if (!c || !p) return (<><Header title="Performance Marketing" /><Empty admin={canWrite(s)} /></>);
   const m = await adsModel(c, p);
   const vs = vsShort(p);
   const suppressed = m.suppressed.reduce((a, x) => a + x.spend, 0);
   const scale = m.rows.filter((r) => r.flag.startsWith("Scale"));
   return (
     <>
-      <Header title="Ads budget" sub={`${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""} · ROAS = attributed 7-day sales / ad spend, all values ex VAT`}>
+      <Header title="Performance Marketing" sub={`${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""} · ROAS = attributed 7-day sales / ad spend, all values ex VAT`}>
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
@@ -60,7 +60,7 @@ export default async function Ads({ searchParams }: { searchParams: SearchParams
           <div className="muted">Spend on days when the listing was suppressed on the platform. It buys nothing, so pause the campaign until the listing is back.</div>
         </section>
       ) : null}
-      <AnalyzeButton key={periodQuery(p)} module="ads" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: ads budget, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="ads" query={periodQuery(p)} canRefresh={canWrite(s)} title={`Claude recommends: performance marketing, ${p.short}`} />
     </>
   );
 }
