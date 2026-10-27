@@ -73,9 +73,10 @@ const f0 = (n: number) => Math.round(n).toLocaleString("en-US");
   const c = (await getCtx())!;
   console.log("data", c.minDate, "to", c.asOf, "| platforms", c.platforms.map((p) => p.name).join(", "));
   // full period first (the headline numbers), then the latest week and month
-  const full = resolvePeriod("year", undefined, c.minDate!, c.asOf!);
+  const full = resolvePeriod({ view: "year" }, c.minDate!, c.asOf!);
   await report(c, full, true);
-  for (const v of ["week", "month"]) await report(c, resolvePeriod(v, undefined, c.minDate!, c.asOf!), false);
+  for (const q of [{ view: "week" }, { view: "week", cmp: "yoy" }, { view: "month", cmp: "yoy" }, { view: "quarter", p: "2026-Q3", cmp: "yoy" }, { view: "ytd", cmp: "yoy" }, { view: "ytd" }, { view: "custom", from: "2026-09-01", to: "2026-09-30", cmp: "yoy" }])
+    await report(c, resolvePeriod(q, c.minDate!, c.asOf!), false);
 })().catch((e) => { console.error(e); process.exit(1); });
 
 async function report(c: NonNullable<Awaited<ReturnType<typeof getCtx>>>, p: Period, detail: boolean) {

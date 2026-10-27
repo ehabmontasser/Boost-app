@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { q } from "./db";
 import { adsModel, getCtx, marketModel, overviewModel, promoModel, replenishmentModel } from "./metrics";
-import { resolvePeriod } from "./period";
+import { resolvePeriod, type PeriodQuery } from "./period";
 
 export const MODULES = ["overview", "replenishment", "ads", "promotions", "market"] as const;
 export type ModuleName = (typeof MODULES)[number];
@@ -16,11 +16,11 @@ export type AnalysisResult = { ok: true; insight: Insight | null; raw?: string; 
 
 const r = (n: number, d = 0) => Math.round(n * 10 ** d) / 10 ** d;
 
-async function payload(module: ModuleName, view?: string, key?: string): Promise<{ brandId: string; data: unknown } | null> {
+async function payload(module: ModuleName, query: PeriodQuery): Promise<{ brandId: string; data: unknown } | null> {
   const c = await getCtx();
   if (!c || !c.asOf || !c.minDate) return null;
-  const p = resolvePeriod(view, key, c.minDate, c.asOf);
-  const period = { label: p.label, from: p.from, to: p.to, days: p.days, comparedWith: p.prev ? p.prev.label : null };
+  const p = resolvePeriod(query, c.minDate, c.asOf);
+  const period = { label: p.label, from: p.from, to: p.to, days: p.days, comparison: p.cmp === "yoy" ? "same period last year" : "previous period", comparedWith: p.prev ? `${p.prev.label}, ${p.prev.from} to ${p.prev.to}` : p.noPrev };
   switch (module) {
     case "overview": {
       const m = await overviewModel(c, p);
@@ -79,7 +79,7 @@ const SYSTEM = `You are a senior e-commerce and quick-commerce analyst advising 
 
 Method:
 1. Use only the figures provided. Never invent numbers, never estimate figures that are not given. If something cannot be concluded from the data, say so in "watch".
-2. The figures cover one reporting period (see "period"). Say which period you are talking about, and use the previous-period figures when given to say what changed. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
+2. The figures cover one reporting period (see "period"). Say which period you are talking about, and use the comparison figures (previous period or same period last year, see "period.comparison") when given to say what changed. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
 3. Every action must cite the specific figures that justify it, name the platform and SKU or campaign, and say exactly what to do and by when if a date is given.
 4. Separate facts (from the data) from judgement (your recommendation). Flag assumptions and uncertainty plainly.
 5. Treat each platform on its own economics. Call Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast "platforms", never "channels". Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are two separate platforms.
@@ -112,7 +112,7 @@ const SCHEMA = {
 };
 
 // Bump when the prompt or request settings change, so saved results from older settings are not reused.
-const PROMPT_VERSION = "3";
+const PROMPT_VERSION = "4";
 
 function parseInsight(text: string): Insight | null {
   const a = text.indexOf("{"), b = text.lastIndexOf("}");
@@ -128,9 +128,9 @@ function parseInsight(text: string): Insight | null {
   } catch { return null; }
 }
 
-export async function analyze(module: ModuleName, force = false, view?: string, periodKey?: string): Promise<AnalysisResult> {
+export async function analyze(module: ModuleName, force = false, query: PeriodQuery = {}): Promise<AnalysisResult> {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
-  const p = await payload(module, view, periodKey);
+  const p = await payload(module, query);
   if (!p) return { ok: false, error: "No data to analyse yet. Upload the Brand Master and the platform files first." };
   const body = JSON.stringify(p.data);
   const hash = createHash("sha256").update(PROMPT_VERSION + module + model + body).digest("hex");

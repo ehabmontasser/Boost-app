@@ -33,7 +33,7 @@ Screens: Overview, Replenishment, Ads budget, Promotions, Market segment share, 
 - Auth: HMAC-signed cookie `boost_session` (`lib/auth.ts`). Roles: `admin` (password in `ADMIN_PASSWORD`) and `brand` (one-click read-only demo). Every page calls `requireSession()` / `requireAdmin()` itself because layouts do not protect pages.
 - Env vars: `DATABASE_URL`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `ANTHROPIC_API_KEY`, optional `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`). See `.env.example`.
 - Metrics are computed in code (`lib/metrics.ts`, SQL in `lib/queries.ts`); Claude only interprets them (JSON: headline, actions, watch). Results are cached by data hash in `analysis_cache`.
-- Period picker (`lib/period.ts`, `components/PeriodPicker.tsx`): every dashboard and the Claude analysis work on a week (Mon to Sun), a month or the full period, chosen in the URL (`?view=week&p=2026-10-19`, `?view=month&p=2026-10`, `?view=year`); default is the latest week. Figures compare with the previous week or month. Replenishment shows stock on the last day of the period. Only the admin can force a fresh Claude call.
+- Period picker (`lib/period.ts`, `components/PeriodPicker.tsx`): every dashboard and the Claude analysis work on a week (Mon to Sun), month, quarter, year to date, custom date range or the full period, chosen in the URL (`?view=week&p=2026-10-19`, `month&p=2026-10`, `quarter&p=2026-Q3`, `ytd`, `custom&from=..&to=..`, `year`), compared with the previous period (default) or the same period last year (`&cmp=yoy`: week = 364 days earlier, month/quarter = same one last year, YTD/custom = same dates last year; PP for YTD/custom = same number of days just before). Partial periods compare like for like. Default is the latest week. Replenishment shows stock on the last day of the period. Only the admin can force a fresh Claude call.
 
 ### Data flow
 Excel files (BOOST data-sharing standard v1.0) -> `lib/xlsx.ts` (dependency-free reader) -> `lib/validate.ts` (rules driven by `lib/spec.json`) -> `lib/mapping.ts` (file columns to DB columns, platform name to code) -> `lib/importer.ts` (upsert by key in 1,000-row chunks inside a transaction) -> `app/api/upload/route.ts`.
@@ -47,18 +47,18 @@ Excel files (BOOST data-sharing standard v1.0) -> `lib/xlsx.ts` (dependency-free
 
 ## Data pack (`datapack/`)
 Python generator for the synthetic pack: `simulate.py` (engine), `spec.py` (standard), `storylines.py`, `build_pack.py`, `validate_pack.py`, `business_numbers.py`, `export_spec.py` (writes `lib/spec.json`).
-Output goes to `datapack/out/` (git-ignored): 5 platforms x 6 feeds x 2 periods = 60 files plus Brand Master plus guide = 62 xlsx files, 150,987 data rows (52 weeks).
-- Backfill: 27 Oct 2025 to 18 Oct 2026. Weekly update: 19 to 25 Oct 2026.
-- The scripted storylines sit in the last 14 weeks (`ANCHOR` = 20 Jul 2026 in `simulate.py`); growth, market share and stock overrides are anchored there. Earlier months add seasonality (Ramadan, both Eids, Yellow/White Friday, Prime Day, summer) and a March price increase.
+Output goes to `datapack/out/` (git-ignored): 5 platforms x 6 feeds x 2 periods = 60 files plus Brand Master plus guide = 62 xlsx files, 302,005 data rows (104 weeks, two years so YoY works).
+- Backfill: 28 Oct 2024 to 18 Oct 2026. Weekly update: 19 to 25 Oct 2026.
+- The scripted storylines sit in the last 14 weeks (`ANCHOR` = 20 Jul 2026 in `simulate.py`); growth, market share and stock overrides are anchored there. Growth before 27 Oct 2025 (`YEAR2`) runs at half pace. Both years have seasonality (Ramadan, both Eids, Yellow/White Friday, Prime Day, summer); dated events repeat in the first year (`add_prior_year`), and list prices rose in Feb 2025, Mar 2026 and Sep 2026.
 - `build_templates.py` writes blank upload templates with a How to use tab.
 - Regenerate: `cd datapack && python3 build_pack.py` (then `python3 export_spec.py` if the spec changed).
 - Place the pack at `datapack/out/Sprout_Baby_Care_Data_Pack/` (the zip the owner already has). The test scripts read it from there.
 
 ## Verified numbers (sanity checks; the in-memory model test must match)
-Full period (27 Oct 2025 to 25 Oct 2026): net sales EGP 35,148,112; ad spend 3,046,918; lost demand 842,643 (2.4%). Promo: 27 promotions, 654 runs, dilutive -135,660, accretive +369,137. On 25 Oct: Talabat Giza 2.6 days and Cairo East 3.4 days of cover at risk (Water Wipes 2x60); Amazon Core aloe 237 days of cover (overstock, open PO 2,400). Talabat ad spend on suppressed listings 6,067. Talabat wipes share 21.3% (first week) to 18.2% (last week). Latest week (19 to 25 Oct): net sales 823,880 vs 785,754 the week before.
+Full period (28 Oct 2024 to 25 Oct 2026): net sales EGP 60,160,515; ad spend 6,093,272; lost demand 1,274,118 (2.1%). Promo: 27 promotions, 1,326 runs, dilutive -268,510, accretive +558,614. On 25 Oct 2026: Talabat Cairo East 4.5 days and Giza 2.2 days of cover at risk (Water Wipes 2x60); Amazon Core aloe overstock (open PO 2,400). Talabat ad spend on suppressed listings 6,080. Latest week (19 to 25 Oct 2026): net sales 783,876 vs 783,147 the week before and 518,260 the same week last year. YTD 2026: 29,846,614 vs YTD 2025 21,156,961. Q3 2026: 10,352,855 vs Q3 2025 7,077,107.
 
 ## Status
-Live at https://boost-app-v8js.vercel.app (Vercel, region fra1). Done: build, tests, deploy, uploads, Claude analysis, platform wording, info icons on every KPI, readable chart labels, 52-week pack with week/month/full-period picker.
+Live at https://boost-app-v8js.vercel.app (Vercel, region fra1). Done: build, tests, deploy, uploads, Claude analysis, platform wording, info icons on every KPI, readable chart labels, two-year pack with week/month/quarter/YTD/custom/full-period picker and previous-period or year-on-year comparison.
 Capstone deadline moved to 30 Oct 2026.
 
 ## First steps in Claude Code

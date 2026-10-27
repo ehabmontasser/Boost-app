@@ -1,6 +1,6 @@
 import { marketModel } from "@/lib/metrics";
 import { pageCtx, type SearchParams } from "@/lib/page";
-import { trendLabel, vsLabel } from "@/lib/period";
+import { periodQuery, trendLabel, vsShort } from "@/lib/period";
 import { dateLabel, egp, pct } from "@/lib/format";
 import { Empty, Header, Kpi, Pill, Title } from "@/components/ui";
 import { ShareLines } from "@/components/charts";
@@ -18,22 +18,22 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
   const comparable = m.wipesNow.filter((x) => x.base !== null);
   const falling = comparable.filter((x) => move(x) < -0.005);
   const worst = [...comparable].sort((a, b) => move(a) - move(b))[0];
-  const since = p.prev ? vsLabel(p) : "since the first week";
-  const trendNote = p.view === "month" ? "by month, last 12 months" : p.view === "week" ? "by week, last 13 weeks" : "by week";
+  const since = p.prev ? vsShort(p) : p.view === "year" ? "since the first week" : p.noPrev ?? "";
+  const trendNote = { week: "by week, last 13 weeks", month: "by month, last 12 months", quarter: "by quarter, last 8 quarters", ytd: "by week, year to date", custom: "over the selected dates", year: "by month" }[p.view];
   const latest = m.latestWeek ? `week of ${dateLabel(m.latestWeek)}` : "latest week";
   return (
     <>
-      <Header title="Market segment share" sub={`Sprout's share of each platform's segment sales · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : ""}`}>
-        <PeriodPicker view={p.view} periodKey={p.key} options={options!} />
+      <Header title="Market segment share" sub={`Sprout's share of each platform's segment sales · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""}`}>
+        <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
-        <Kpi info="Platforms where Sprout's wipes share in the selected period is more than 0.5 points below the comparison: the previous week or month, or the first week for the full period. Share = Sprout wipes sales / wipes sales of all brands on the platform (Market files)." label="Platforms losing wipes share" value={`${falling.length} of ${comparable.length}`} tone={falling.length ? "bad" : "good"} note={since} />
+        <Kpi info="Platforms where Sprout's wipes share in the selected period is more than 0.5 points below the comparison period (previous period or same period last year), or below the first week for the full period. Share = Sprout wipes sales / wipes sales of all brands on the platform (Market files)." label="Platforms losing wipes share" value={`${falling.length} of ${comparable.length}`} tone={falling.length ? "bad" : "good"} note={since} />
         {worst ? <Kpi info="The platform whose wipes share moved down the most against the comparison period, in percentage points." label={`Biggest ${move(worst) < 0 ? "drop" : "change"}: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone={move(worst) < 0 ? "bad" : "good"} note={`${pct(worst.base ?? 0)} to ${pct(worst.now ?? 0)}`} /> : null}
         <Kpi info="Platforms where at least one Sprout product in the SKU master has no listing (Brand Master, Platform_Listings)." label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
       </section>
       <div className="row">
         <section className="card">
-          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly view: the 13 weeks up to the selected week. Monthly view: the 12 months up to the selected month. Full period: every week.">Wipes share by platform</Title>
+          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly: the 13 weeks up to the selected week. Monthly: the 12 months up to it. Quarterly: the 8 quarters up to it. YTD and custom: each week in the range (by month for long ranges). Full period: by month.">Wipes share by platform</Title>
           <ShareLines series={m.wipes} label={`Wipes share by platform, ${trendNote}`} start={trendLabel(m.trendStart)} end={trendLabel(m.trendEnd)} />
         </section>
         <section className="card">
@@ -84,7 +84,7 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
           <div className="muted">Quick-commerce platforms carry a small-pack range by design, so gaps there are shelf-driven, not mistakes.</div>
         </section>
       </div>
-      <AnalyzeButton key={p.view + p.key} module="market" view={p.view} periodKey={p.key} canRefresh={s.role === "admin"} title={`Claude recommends: segment share, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="market" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: segment share, ${p.short}`} />
     </>
   );
 }

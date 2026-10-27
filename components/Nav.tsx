@@ -12,7 +12,9 @@ export default function Nav({ admin }: { admin: boolean }) {
   const path = usePathname();
   // keep the chosen reporting period when moving between dashboards
   const sp = useSearchParams();
-  const period = sp.get("view") ? `?view=${sp.get("view")}${sp.get("p") ? `&p=${sp.get("p")}` : ""}` : "";
+  const keep = new URLSearchParams();
+  for (const k of ["view", "p", "from", "to", "cmp"]) { const v = sp.get(k); if (v) keep.set(k, v); }
+  const period = keep.toString() ? `?${keep.toString()}` : "";
   const withPeriod = (href: string) => (href === "/freshness" ? href : href + period);
   const cls = (p: string) => (path === p || path.startsWith(p + "/") ? "on" : "");
   return (

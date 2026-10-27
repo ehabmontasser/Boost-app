@@ -39,7 +39,14 @@ h2 { font-size: 20px; font-weight: 600; }
 .title-info { display: flex; align-items: center; gap: 8px; }
 
 /* Period picker (week / month / full period) */
-.picker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.picker { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; max-width: 100%; }
+.picker .seg { flex-wrap: wrap; }
+.picker-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.picker .custom { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.picker .custom label { display: flex; align-items: center; gap: 6px; }
+.picker .custom input { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+.picker .apply { font: inherit; font-size: 14px; font-weight: 600; padding: 7px 14px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; cursor: pointer; }
+@media (max-width: 760px) { .picker { align-items: stretch; } .picker-row { justify-content: flex-start; } }
 .picker .seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
 .picker .seg button { all: unset; cursor: pointer; padding: 7px 12px; border-radius: 7px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .picker .seg button.on { background: var(--ink); color: #fff; }

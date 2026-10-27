@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { overviewModel } from "@/lib/metrics";
 import { pageCtx, type SearchParams } from "@/lib/page";
-import { dayLabel, pctChange, trendLabel, vsLabel } from "@/lib/period";
+import { dayLabel, pctChange, periodQuery, trendLabel, vsShort } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
 import { Bars, ShareLines } from "@/components/charts";
 import { Empty, Header, Kpi, Title } from "@/components/ui";
@@ -14,24 +14,24 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
   const { s, c, p, options } = await pageCtx(searchParams);
   if (!c || !p) return (<><Header title="Overview" /><Empty admin={s.role === "admin"} /></>);
   const m = await overviewModel(c, p);
-  const vs = vsLabel(p);
+  const vs = vsShort(p);
   const change = (now: number, before: number | null | undefined) => { const t = pctChange(now, before); return t ? `${t} ${vs}` : ""; };
   const worst = [...m.rows].sort((a, b) => b.lostPct - a.lostPct)[0];
   // the platform whose wipes share fell most against the comparison period
   const drop = [...m.rows].filter((r) => r.wipesNow !== null && r.wipesBase !== null).sort((a, b) => ((a.wipesNow ?? 0) - (a.wipesBase ?? 0)) - ((b.wipesNow ?? 0) - (b.wipesBase ?? 0)))[0];
   const dropPts = drop ? ((drop.wipesNow ?? 0) - (drop.wipesBase ?? 0)) * 100 : 0;
   const base = p.prev ? vs : "since the first week";
-  const trendNote = p.view === "month" ? "by month, last 12 months" : p.view === "week" ? "by week, last 13 weeks" : "by week";
+  const trendNote = { week: "by week, last 13 weeks", month: "by month, last 12 months", quarter: "by quarter, last 8 quarters", ytd: "by week, year to date", custom: "over the selected dates", year: "by month" }[p.view];
   return (
     <>
-      <Header title="Overview" sub={`${c.brandName} · ${m.rows.length} platforms · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : ""} · data through ${dayLabel(c.asOf!)}`}>
-        <PeriodPicker view={p.view} periodKey={p.key} options={options!} />
+      <Header title="Overview" sub={`${c.brandName} · ${m.rows.length} platforms · ${p.label}${p.prev ? ` · compared with ${p.prev.label}` : p.noPrev ? ` · ${p.noPrev}` : ""} · data through ${dayLabel(c.asOf!)}`}>
+        <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
-        <Kpi info="What customers paid after all discounts, excluding VAT, summed across all platforms over the selected period. Net sales = gross sales minus discounts (Sales files). The change compares with the previous week or month." label="Net sales ex VAT" value={egp(m.totalNet)} note={change(m.totalNet, m.prevTotals?.net) || `${m.rows.length} platforms, ${p.short}`} />
+        <Kpi info="What customers paid after all discounts, excluding VAT, summed across all platforms over the selected period. Net sales = gross sales minus discounts (Sales files). The change compares with the chosen comparison: the previous period or the same period last year." label="Net sales ex VAT" value={egp(m.totalNet)} note={change(m.totalNet, m.prevTotals?.net) || `${m.rows.length} platforms, ${p.short}`} />
         <Kpi info="Total media cost on all platforms over the selected period, excluding VAT (Ads files). The % below is ad spend divided by net sales." label="Ad spend" value={egp(m.totalSpend)} note={`${pct(m.spendPct)} of sales${m.prevTotals ? ` · ${change(m.totalSpend, m.prevTotals.spend)}` : ""}`} />
         <Kpi info="Sales missed because products were out of stock: demand units the platform could not fill (Inventory files) x that day's selling price (Price and Promo files), over the selected period. The % is lost demand divided by net sales. 'Worst' is the platform with the highest %." label="Demand lost to stockouts" value={egp(m.totalLost)} tone="bad" note={`${pct(m.lostPct)} of sales${worst ? ` · worst: ${worst.name} ${pct(worst.lostPct)}` : ""}`} />
-        {drop ? <Kpi info="Sprout's share of all wipes sales on the platform whose share moved down the most: Sprout wipes sales / wipes sales of all brands (Market files), for the weeks in the selected period. The line below compares it with the previous period (or the first week, for the full period)." label={`Wipes share, ${drop.name}`} value={pct(drop.wipesNow ?? 0)} tone={dropPts < 0 ? "bad" : "good"} note={`${dropPts < 0 ? "Down" : "Up"} ${Math.abs(dropPts).toFixed(1)} pts ${base}`} /> : null}
+        {drop ? <Kpi info="Sprout's share of all wipes sales on the platform whose share moved down the most: Sprout wipes sales / wipes sales of all brands (Market files), for the weeks in the selected period. The line below compares it with the chosen comparison period (or the first week, for the full period)." label={`Wipes share, ${drop.name}`} value={pct(drop.wipesNow ?? 0)} tone={dropPts < 0 ? "bad" : "good"} note={`${dropPts < 0 ? "Down" : "Up"} ${Math.abs(dropPts).toFixed(1)} pts ${base}`} /> : null}
       </section>
       <div className="row">
         <section className="card wide">
@@ -40,7 +40,7 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
           <div className="muted">All values ex VAT, EGP. Bar length is relative to the largest platform.</div>
         </section>
         <section className="card">
-          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly view: the 13 weeks up to the selected week. Monthly view: the 12 months up to the selected month. Full period: every week.">Wipes share of the platform segment</Title>
+          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly: the 13 weeks up to the selected week. Monthly: the 12 months up to it. Quarterly: the 8 quarters up to it. YTD and custom: each week in the range (by month for long ranges). Full period: by month.">Wipes share of the platform segment</Title>
           <ShareLines series={m.market.wipes} label={`Wipes share by platform, ${trendNote}`} start={trendLabel(m.market.trendStart)} end={trendLabel(m.market.trendEnd)} />
           <div className="muted">Sprout's share of wipes sales on each platform, {trendNote}.</div>
         </section>
@@ -65,9 +65,9 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
             </tbody>
           </table>
         </div>
-        <div className="muted">Go deeper: <Link href={`/replenishment?view=${p.view}&p=${p.key}`} className="info">Replenishment</Link> · <Link href={`/ads?view=${p.view}&p=${p.key}`} className="info">Ads budget</Link> · <Link href={`/promotions?view=${p.view}&p=${p.key}`} className="info">Promotions</Link> · <Link href={`/market?view=${p.view}&p=${p.key}`} className="info">Market segment share</Link></div>
+        <div className="muted">Go deeper: <Link href={`/replenishment?${periodQuery(p)}`} className="info">Replenishment</Link> · <Link href={`/ads?${periodQuery(p)}`} className="info">Ads budget</Link> · <Link href={`/promotions?${periodQuery(p)}`} className="info">Promotions</Link> · <Link href={`/market?${periodQuery(p)}`} className="info">Market segment share</Link></div>
       </section>
-      <AnalyzeButton key={p.view + p.key} module="overview" view={p.view} periodKey={p.key} canRefresh={s.role === "admin"} title={`What Claude flags across all platforms, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="overview" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`What Claude flags across all platforms, ${p.short}`} />
     </>
   );
 }

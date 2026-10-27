@@ -22,7 +22,7 @@ export default async function Upload() {
         <h2>Order of work</h2>
         <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
           <li>Brand Master (SETUP_00_BRAND_MASTER_v1.xlsx). Nothing else loads until this exists.</li>
-          <li>The 30 backfill files (27 Oct 2025 to 18 Oct 2026). Select a whole platform folder at once.</li>
+          <li>The 30 backfill files (28 Oct 2024 to 18 Oct 2026). Select a whole platform folder at once.</li>
           <li>Check Data freshness reads &quot;through 18 Oct&quot; on every daily card.</li>
           <li>The 30 weekly files (19 to 25 Oct). Same steps.</li>
         </ol>

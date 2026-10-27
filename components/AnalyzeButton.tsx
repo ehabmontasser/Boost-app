@@ -4,7 +4,7 @@ import { useState } from "react";
 type Insight = { headline: string; actions: { title: string; why: string; do: string; impact: string }[]; watch: string[] };
 
 // canRefresh: only the admin may force a new (paid) Claude call; others see the saved answer.
-export default function AnalyzeButton({ module, title, canRefresh, view, periodKey }: { module: string; title: string; canRefresh: boolean; view: string; periodKey: string }) {
+export default function AnalyzeButton({ module, title, canRefresh, query }: { module: string; title: string; canRefresh: boolean; query: string }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [insight, setInsight] = useState<Insight | null>(null);
@@ -14,7 +14,7 @@ export default function AnalyzeButton({ module, title, canRefresh, view, periodK
   async function run(force: boolean) {
     setBusy(true); setErr(null);
     try {
-      const res = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ module, force, view, p: periodKey }) });
+      const res = await fetch("/api/analyze", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ module, force, query }) });
       const j = await res.json();
       if (!j.ok) { setErr(j.error ?? "Analysis failed."); setInsight(null); setRaw(null); }
       else { setInsight(j.insight); setRaw(j.raw ?? null); setMeta(`${j.model}${j.cached ? " · saved result, data unchanged" : ""}`); }

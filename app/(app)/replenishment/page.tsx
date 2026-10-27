@@ -1,5 +1,6 @@
 import { replenishmentModel } from "@/lib/metrics";
 import { pageCtx, type SearchParams } from "@/lib/page";
+import { periodQuery } from "@/lib/period";
 import { dateLabel, egp, int, pct } from "@/lib/format";
 import { Empty, Header, Kpi, Pill, statusTone, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
@@ -16,7 +17,7 @@ export default async function Replenishment({ searchParams }: { searchParams: Se
   return (
     <>
       <Header title="Replenishment" sub={`Stock position on ${dateLabel(m.asOf)} (last day of ${p.view === "year" ? "the period" : p.short}) · lost demand and POs for ${p.label} · cover = on hand / average daily sales of the 14 days before`}>
-        <PeriodPicker view={p.view} periodKey={p.key} options={options!} />
+        <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
         <Kpi info="Store or warehouse and product combinations expected to run out before stock arrives, judged on the last day of the selected period. At risk when the gap is 1.5 days or more and at least 10 units. Gap = days until the next PO lands (or lead time + review cycle if no PO is open) minus days of cover. Units short = gap x daily units sold." label="Nodes at risk" value={String(m.atRisk.length)} tone={m.atRisk.length ? "bad" : "good"} note={`about ${int(unitsAtRisk)} units short before the next PO lands`} />
@@ -90,7 +91,7 @@ export default async function Replenishment({ searchParams }: { searchParams: Se
           </table></div>
         </section>
       </div>
-      <AnalyzeButton key={p.view + p.key} module="replenishment" view={p.view} periodKey={p.key} canRefresh={s.role === "admin"} title={`Claude recommends: stock, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="replenishment" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: stock, ${p.short}`} />
     </>
   );
 }

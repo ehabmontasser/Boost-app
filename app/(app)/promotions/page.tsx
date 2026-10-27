@@ -1,5 +1,6 @@
 import { promoModel } from "@/lib/metrics";
 import { pageCtx, type SearchParams } from "@/lib/page";
+import { periodQuery } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
 import { Empty, Header, Kpi, Pill, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
@@ -15,7 +16,7 @@ export default async function Promotions({ searchParams }: { searchParams: Searc
   return (
     <>
       <Header title="Promotions" sub={`Promotions running in ${p.label} · each run compared with the 14 days before it, after platform margin, cost of goods and the brand-funded discount`}>
-        <PeriodPicker view={p.view} periodKey={p.key} options={options!} />
+        <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
         <Kpi info="Promotions running in the selected period. Each run (consecutive promotion days) is compared with the product's non-promotion days in the 14 days before it; runs need at least 5 such days. A run that overlaps the period is counted in full." label="Promotions analysed" value={String(m.rows.length)} note={`${m.rows.reduce((a, r) => a + r.runs, 0)} runs, all platforms`} />
@@ -45,7 +46,7 @@ export default async function Promotions({ searchParams }: { searchParams: Searc
         </div>
         {best ? <div className="muted">Best: {best.name}, {best.promo}, {egp(best.effect, false)}. Deep discounts paid fully by the brand lift volume but cost more than the extra units earn. Shared or platform-funded deals pay.</div> : null}
       </section>
-      <AnalyzeButton key={p.view + p.key} module="promotions" view={p.view} periodKey={p.key} canRefresh={s.role === "admin"} title={`Claude recommends: promotions and discounts, ${p.short}`} />
+      <AnalyzeButton key={periodQuery(p)} module="promotions" query={periodQuery(p)} canRefresh={s.role === "admin"} title={`Claude recommends: promotions and discounts, ${p.short}`} />
     </>
   );
 }

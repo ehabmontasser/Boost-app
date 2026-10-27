@@ -74,19 +74,24 @@ export async function marketModel(c: Ctx, p: Period) {
   const now = (category: string): ShareNow[] => c.platforms.map((pl) => ({
     code: pl.code, name: pl.name,
     now: p.view === "year" ? shareOf(pl.code, category, periodWeeks.slice(-1)) : shareOf(pl.code, category, periodWeeks),
-    base: p.prev ? shareOf(pl.code, category, prevWeeks) : periodWeeks.length > 1 ? shareOf(pl.code, category, periodWeeks.slice(0, 1)) : null,
+    base: p.prev ? shareOf(pl.code, category, prevWeeks) : p.view === "year" && periodWeeks.length > 1 ? shareOf(pl.code, category, periodWeeks.slice(0, 1)) : null,
   })).filter((s) => s.now !== null);
 
-  // trend charts: 13 weeks for a week, 12 months for a month, every week for the full period
+  // trend charts: 13 weeks (week), 12 months (month), 8 quarters (quarter), weeks of the range (YTD, custom up to
+  // 26 weeks) or months (longer custom ranges and the full period)
   const allWeeks = [...new Set(cat.map((x) => x.week_start))].sort().filter((w) => w <= p.to);
+  const qKey = (w: string) => `${w.slice(0, 4)}-Q${Math.floor((+w.slice(5, 7) - 1) / 3) + 1}`;
+  const group = (ws: string[], keyOf: (w: string) => string, last: number) => {
+    const keys = [...new Set(ws.map(keyOf))].slice(-last);
+    return keys.map((k) => ({ label: k, weeks: ws.filter((w) => keyOf(w) === k) }));
+  };
+  const inRange = allWeeks.filter((w) => w >= wr.from);
   let buckets: { label: string; weeks: string[] }[];
-  if (p.view === "month") {
-    const months = [...new Set(allWeeks.map((w) => w.slice(0, 7)))].slice(-12);
-    buckets = months.map((m) => ({ label: m, weeks: allWeeks.filter((w) => w.startsWith(m)) }));
-  } else {
-    const ws = p.view === "week" ? allWeeks.slice(-13) : allWeeks.filter((w) => w >= wr.from);
-    buckets = ws.map((w) => ({ label: w, weeks: [w] }));
-  }
+  if (p.view === "month") buckets = group(allWeeks, (w) => w.slice(0, 7), 12);
+  else if (p.view === "quarter") buckets = group(allWeeks, qKey, 8);
+  else if (p.view === "week") buckets = allWeeks.slice(-13).map((w) => ({ label: w, weeks: [w] }));
+  else if (p.view === "year" || inRange.length > 26) buckets = group(inRange, (w) => w.slice(0, 7), 999);
+  else buckets = inRange.map((w) => ({ label: w, weeks: [w] }));
   const trend = (category: string): ShareSeries[] => c.platforms.map((pl) => ({
     code: pl.code, name: pl.name, share: buckets.map((b) => shareOf(pl.code, category, b.weeks) ?? 0),
   })).filter((s) => s.share.some((v) => v > 0));
