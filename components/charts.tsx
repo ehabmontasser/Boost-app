@@ -21,13 +21,13 @@ const endText = (s: Series) => `${s.name} ${((s.share[s.share.length - 1] ?? 0) 
 
 /** Multi-series line chart. Values are fractions (0.18 = 18%). Wide screens label the line ends;
  *  phones get a compact chart with larger axis text and a legend underneath, so labels stay readable. */
-export function ShareLines({ series, label }: { series: Series[]; label: string }) {
+export function ShareLines({ series, label, start = "first week", end = "latest" }: { series: Series[]; label: string; start?: string; end?: string }) {
   if (!series.some((s) => s.share.length)) return <div className="muted">No market data yet.</div>;
   return (
     <div className="chart-box">
-      <div className="chart-wide"><ShareLinesPlot series={series} label={label} compact={false} /></div>
+      <div className="chart-wide"><ShareLinesPlot series={series} label={label} compact={false} start={start} end={end} /></div>
       <div className="chart-compact">
-        <ShareLinesPlot series={series} label={label} compact />
+        <ShareLinesPlot series={series} label={label} compact start={start} end={end} />
         <ul className="chart-legend">
           {[...series].sort((a, b) => (b.share[b.share.length - 1] ?? 0) - (a.share[a.share.length - 1] ?? 0)).map((s) => (
             <li key={s.code}><span className="dot" style={{ background: platformColor[s.code] ?? "var(--ink)" }} />{endText(s)}</li>
@@ -38,7 +38,7 @@ export function ShareLines({ series, label }: { series: Series[]; label: string 
   );
 }
 
-function ShareLinesPlot({ series, label, compact }: { series: Series[]; label: string; compact: boolean }) {
+function ShareLinesPlot({ series, label, compact, start, end }: { series: Series[]; label: string; compact: boolean; start: string; end: string }) {
   const all = series.flatMap((s) => s.share);
   // wide: right margin sized to the longest end label (about 7 units per character at 11px semibold), so labels are never cut off
   const R = compact ? 12 : Math.ceil(Math.max(...series.map((s) => endText(s).length)) * 7) + 12;
@@ -67,8 +67,8 @@ function ShareLinesPlot({ series, label, compact }: { series: Series[]; label: s
           <text x={L - 6} y={y(t) + fs / 3} fontSize={fs} textAnchor="end" fill="var(--muted)">{(t * 100).toFixed(0)}%</text>
         </g>
       ))}
-      <text x={L} y={H - 6} fontSize={fs} fill="var(--muted)">week 1</text>
-      <text x={W - R} y={H - 6} fontSize={fs} fill="var(--muted)" textAnchor="end">latest</text>
+      <text x={L} y={H - 6} fontSize={fs} fill="var(--muted)">{start}</text>
+      <text x={W - R} y={H - 6} fontSize={fs} fill="var(--muted)" textAnchor="end">{end}</text>
       {series.map((s) => (
         <g key={s.code}>
           <polyline fill="none" stroke={platformColor[s.code] ?? "var(--ink)"} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"

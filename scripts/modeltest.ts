@@ -9,6 +9,7 @@ import { FEED_TABLES, MARKET_CATEGORY, SETUP_TABLES, TableMap, platformCode } fr
 import { setExecutor } from "../lib/db";
 import spec from "../lib/spec.json";
 import { getCtx, overviewModel, replenishmentModel, adsModel, promoModel, marketModel } from "../lib/metrics";
+import { resolvePeriod, type Period } from "../lib/period";
 
 const pack = process.argv[2] ?? join(__dirname, "..", "datapack", "out", "Sprout_Baby_Care_Data_Pack");
 const db = new DatabaseSync(":memory:");
@@ -70,25 +71,32 @@ setExecutor(async (sql, params = []) => {
 const f0 = (n: number) => Math.round(n).toLocaleString("en-US");
 (async () => {
   const c = (await getCtx())!;
-  console.log("asOf", c.asOf, "| platforms", c.platforms.map((p) => p.name).join(", "));
-  const ov = await overviewModel(c);
-  console.log(`\nOVERVIEW total net ${f0(ov.totalNet)} | ad spend ${f0(ov.totalSpend)} (${(ov.spendPct * 100).toFixed(1)}%) | lost ${f0(ov.totalLost)} (${(ov.lostPct * 100).toFixed(1)}%)`);
-  for (const r of ov.rows)
-    console.log(` ${r.name.padEnd(13)} net ${f0(r.net).padStart(10)} spend ${f0(r.spend).padStart(8)} roas ${r.roas.toFixed(2)} lost ${f0(r.lostValue).padStart(7)} (${(r.lostPct * 100).toFixed(1)}%) wipes ${((r.wipesFirst ?? 0) * 100).toFixed(1)} -> ${((r.wipesLast ?? 0) * 100).toFixed(1)}`);
-  const rep = (await replenishmentModel(c))!;
-  console.log(`\nREPLENISHMENT as of ${rep.asOf}: at risk nodes ${rep.atRisk.length}, overstock lines ${rep.overstock.length}`);
-  for (const r of rep.action.slice(0, 10)) console.log(` ${r.status.padEnd(9)} ${r.platformName} | ${r.nodeName} | ${r.skuName} | on hand ${r.onHand} | cover ${r.cover.toFixed(1)}d | eta ${r.eta ?? "-"} | gap ${r.gapDays.toFixed(1)}d ~${r.unitsAtRisk.toFixed(0)} units`);
-  for (const r of rep.overstock.slice(0, 4)) console.log(` OVERSTOCK ${r.name} | ${r.skuName} | ${f0(r.onHand)} units | ${r.cover.toFixed(0)} days | open PO ${r.openPo}`);
-  console.log(" lowest PO confirmation:", rep.lowestConfirm.map((p) => `${p.name} ${p.skuName} ${(100 * (p.confirmRate ?? 0)).toFixed(0)}%`).join("; "));
-  const ads = await adsModel(c);
-  console.log(`\nADS total spend ${f0(ads.totalSpend)} roas ${ads.roas.toFixed(2)} below-target spend ${f0(ads.belowSpend)}`);
-  for (const r of ads.rows.slice(0, 8)) console.log(` ${r.name.padEnd(13)} ${r.campaign.padEnd(34)} spend ${f0(r.spend).padStart(7)} roas ${r.roas.toFixed(1)} lost ${(r.lostShare * 100).toFixed(0)}% ${r.flag}`);
-  console.log(" suppressed:", ads.suppressed.map((s) => `${s.name} ${f0(s.spend)}`).join("; "));
-  const pr = await promoModel(c);
-  console.log(`\nPROMO dilutive ${f0(pr.dilutive)} accretive ${f0(pr.accretive)}`);
-  for (const r of pr.rows.slice(0, 5).concat(pr.rows.slice(-3))) console.log(` ${r.name.padEnd(13)} ${r.promo.padEnd(24)} depth ${(r.depth * 100).toFixed(0)}% uplift ${r.uplift.toFixed(2)}x effect ${f0(r.effect)}`);
-  const mk = await marketModel(c);
-  console.log(`\nMARKET latest week ${mk.latestWeek}`);
-  for (const [p, rows] of Object.entries(mk.top)) console.log(` ${p}: ${rows.slice(0, 3).map((x) => `${x.rank}.${x.brand}${x.own ? "*" : ""}`).join(" ")}`);
-  for (const g of mk.gaps) console.log(` gaps ${g.name}: ${g.missing.length}`);
+  console.log("data", c.minDate, "to", c.asOf, "| platforms", c.platforms.map((p) => p.name).join(", "));
+  // full period first (the headline numbers), then the latest week and month
+  const full = resolvePeriod("year", undefined, c.minDate!, c.asOf!);
+  await report(c, full, true);
+  for (const v of ["week", "month"]) await report(c, resolvePeriod(v, undefined, c.minDate!, c.asOf!), false);
 })().catch((e) => { console.error(e); process.exit(1); });
+
+async function report(c: NonNullable<Awaited<ReturnType<typeof getCtx>>>, p: Period, detail: boolean) {
+  console.log(`
+================ ${p.label}${p.prev ? ` (vs ${p.prev.label})` : ""} ================`);
+  const ov = await overviewModel(c, p);
+  console.log(`OVERVIEW net ${f0(ov.totalNet)}${ov.prevTotals ? ` (prev ${f0(ov.prevTotals.net)})` : ""} | ad spend ${f0(ov.totalSpend)} (${(ov.spendPct * 100).toFixed(1)}%) | lost ${f0(ov.totalLost)} (${(ov.lostPct * 100).toFixed(1)}%)`);
+  for (const r of ov.rows)
+    console.log(` ${r.name.padEnd(13)} net ${f0(r.net).padStart(10)} spend ${f0(r.spend).padStart(9)} roas ${r.roas.toFixed(2)} lost ${f0(r.lostValue).padStart(7)} (${(r.lostPct * 100).toFixed(1)}%) wipes ${((r.wipesBase ?? 0) * 100).toFixed(1)} -> ${((r.wipesNow ?? 0) * 100).toFixed(1)}`);
+  const rep = (await replenishmentModel(c, p))!;
+  console.log(`REPLENISHMENT as of ${rep.asOf}: at risk ${rep.atRisk.length}, overstock ${rep.overstock.length}, lost ${f0(rep.totalLost)}`);
+  for (const r of rep.action.slice(0, detail ? 6 : 3)) console.log(` ${r.status.padEnd(9)} ${r.platformName} | ${r.nodeName} | ${r.skuName} | on hand ${r.onHand} | cover ${r.cover.toFixed(1)}d | eta ${r.eta ?? "-"} | gap ${r.gapDays.toFixed(1)}d ~${r.unitsAtRisk.toFixed(0)} units`);
+  for (const r of rep.overstock.slice(0, 2)) console.log(` OVERSTOCK ${r.name} | ${r.skuName} | ${f0(r.onHand)} units | ${r.cover.toFixed(0)} days | open PO ${r.openPo}`);
+  console.log(" lowest PO confirmation:", rep.lowestConfirm.slice(0, 3).map((x) => `${x.name} ${x.skuName} ${(100 * (x.confirmRate ?? 0)).toFixed(0)}%`).join("; "));
+  const ads = await adsModel(c, p);
+  console.log(`ADS spend ${f0(ads.totalSpend)} roas ${ads.roas.toFixed(2)} below-target ${f0(ads.belowSpend)} | suppressed: ${ads.suppressed.map((x) => `${x.name} ${f0(x.spend)}`).join("; ") || "none"}`);
+  if (detail) for (const r of ads.rows.slice(0, 5)) console.log(` ${r.name.padEnd(13)} ${r.campaign.padEnd(34)} spend ${f0(r.spend).padStart(7)} roas ${r.roas.toFixed(1)} lost ${(r.lostShare * 100).toFixed(0)}% ${r.flag}`);
+  const pr = await promoModel(c, p);
+  console.log(`PROMO ${pr.rows.length} promotions, ${pr.rows.reduce((a, r) => a + r.runs, 0)} runs | dilutive ${f0(pr.dilutive)} accretive ${f0(pr.accretive)}`);
+  for (const r of detail ? pr.rows.slice(0, 4).concat(pr.rows.slice(-3)) : pr.rows.slice(0, 2)) console.log(` ${r.name.padEnd(13)} ${r.promo.padEnd(24)} runs ${String(r.runs).padStart(2)} depth ${(r.depth * 100).toFixed(0)}% uplift ${r.uplift.toFixed(2)}x effect ${f0(r.effect)}`);
+  const mk = await marketModel(c, p);
+  console.log(`MARKET last week ${mk.latestWeek} | wipes share ${mk.wipesNow.map((x) => `${x.name} ${((x.base ?? 0) * 100).toFixed(1)}->${((x.now ?? 0) * 100).toFixed(1)}`).join(", ")}`);
+  console.log(` trend ${mk.trendStart} .. ${mk.trendEnd} (${mk.wipes[0]?.share.length ?? 0} points)`);
+}

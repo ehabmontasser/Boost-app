@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { q } from "./db";
 import { adsModel, getCtx, marketModel, overviewModel, promoModel, replenishmentModel } from "./metrics";
+import { resolvePeriod } from "./period";
 
 export const MODULES = ["overview", "replenishment", "ads", "promotions", "market"] as const;
 export type ModuleName = (typeof MODULES)[number];
@@ -15,25 +16,27 @@ export type AnalysisResult = { ok: true; insight: Insight | null; raw?: string; 
 
 const r = (n: number, d = 0) => Math.round(n * 10 ** d) / 10 ** d;
 
-async function payload(module: ModuleName): Promise<{ brandId: string; data: unknown } | null> {
+async function payload(module: ModuleName, view?: string, key?: string): Promise<{ brandId: string; data: unknown } | null> {
   const c = await getCtx();
-  if (!c) return null;
-  const asOf = c.asOf;
+  if (!c || !c.asOf || !c.minDate) return null;
+  const p = resolvePeriod(view, key, c.minDate, c.asOf);
+  const period = { label: p.label, from: p.from, to: p.to, days: p.days, comparedWith: p.prev ? p.prev.label : null };
   switch (module) {
     case "overview": {
-      const m = await overviewModel(c);
+      const m = await overviewModel(c, p);
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, currency: "EGP ex VAT",
-        note: "wipesSegmentShare = Sprout's share of all wipes sales on that platform, all brands included (a fraction, 0.188 = 18.8%). It is market share, not a share of Sprout's own sales.",
+        brand: c.brandName, period, currency: "EGP ex VAT",
+        note: "All figures cover the period only. wipesSegmentShare = Sprout's share of all wipes sales on that platform, all brands included (a fraction, 0.188 = 18.8%). It is market share, not a share of Sprout's own sales. wipesSegmentShareBefore = the previous period (or the period's first week).",
         totals: { netSales: r(m.totalNet), adSpend: r(m.totalSpend), adSpendPct: r(m.spendPct, 3), lostDemand: r(m.totalLost), lostDemandPct: r(m.lostPct, 3) },
-        platforms: m.rows.map((x) => ({ platform: x.name, platformType: x.channel, netSales: r(x.net), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareFirstWeek: x.wipesFirst === null ? null : r(x.wipesFirst, 3), wipesSegmentShareLatest: x.wipesLast === null ? null : r(x.wipesLast, 3) })),
+        previousPeriodTotals: m.prevTotals ? { netSales: r(m.prevTotals.net), adSpend: r(m.prevTotals.spend), lostDemand: r(m.prevTotals.lost) } : null,
+        platforms: m.rows.map((x) => ({ platform: x.name, platformType: x.channel, netSales: r(x.net), netSalesPreviousPeriod: x.prevNet === null ? null : r(x.prevNet), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareBefore: x.wipesBase === null ? null : r(x.wipesBase, 3), wipesSegmentShare: x.wipesNow === null ? null : r(x.wipesNow, 3) })),
       } };
     }
     case "replenishment": {
-      const m = await replenishmentModel(c);
+      const m = await replenishmentModel(c, p);
       if (!m) return null;
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, currency: "EGP ex VAT", note: "cover = on hand / average daily units of the last 14 days. gapDays = days a node is expected to be empty before the next PO lands. Lost demand covers all loaded data, 13 weeks up to asOf.",
+        brand: c.brandName, period, stockPositionOn: m.asOf, currency: "EGP ex VAT", note: "Stock position is on the last day of the period. cover = on hand / average daily units of the 14 days up to that day. gapDays = days a node is expected to be empty before the next PO lands. Lost demand and PO figures cover the period.",
         atRisk: m.atRisk.slice(0, 10).map((x) => ({ platform: x.platformName, node: x.nodeName, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover, 1), nextPoEta: x.eta, gapDays: r(x.gapDays, 1), unitsAtRisk: r(x.unitsAtRisk) })),
         overstock: m.overstock.slice(0, 5).map((x) => ({ platform: x.name, sku: x.skuName, onHand: x.onHand, coverDays: r(x.cover), openPoUnits: x.openPo, nextPoEta: x.eta, maxCoverDays: x.maxCover })),
         lostDemandByPlatform: m.channel.map((x) => ({ platform: x.name, lostDemandEgp: r(x.lostValue), lostPctOfSales: r(x.lostPct, 3) })),
@@ -42,30 +45,30 @@ async function payload(module: ModuleName): Promise<{ brandId: string; data: unk
       } };
     }
     case "ads": {
-      const m = await adsModel(c);
+      const m = await adsModel(c, p);
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, note: "ROAS = attributed 7-day sales / ad spend. lostShare = share of impressions lost to budget.",
-        totals: { adSpend: r(m.totalSpend), attributedSales: r(m.totalAtt), roas: r(m.roas, 2), spendInCampaignsBelowTargetRoas: r(m.belowSpend) },
+        brand: c.brandName, period, currency: "EGP ex VAT", note: "ROAS = attributed 7-day sales / ad spend. lostShareBudget = share of impressions lost to budget. All figures cover the period.",
+        totals: { adSpend: r(m.totalSpend), attributedSales: r(m.totalAtt), roas: r(m.roas, 2), spendInCampaignsBelowTargetRoas: r(m.belowSpend), adSpendPreviousPeriod: m.prevSpend === null ? null : r(m.prevSpend), roasPreviousPeriod: m.prevRoas === null ? null : r(m.prevRoas, 2) },
         campaigns: m.rows.slice(0, 14).map((x) => ({ platform: x.name, campaign: x.campaign, type: x.type, objective: x.objective, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, shareOfPlatformSpend: r(x.spendShare, 3), lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
         spendOnSuppressedListings: m.suppressed.map((x) => ({ platform: x.name, spend: r(x.spend), attributedSales: r(x.att) })),
       } };
     }
     case "promotions": {
-      const m = await promoModel(c);
+      const m = await promoModel(c, p);
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, method: "Estimated profit effect = (promo-period daily units x promo margin - 14-day pre-period daily units x normal margin) x promo days, after platform margin, COGS and the vendor-funded discount.",
+        brand: c.brandName, period, currency: "EGP ex VAT", method: "Each run of a promotion is compared with the SKU's non-promo days in the 14 days before it. Estimated profit effect = (promo daily units x promo margin - baseline daily units x normal margin) x promo days, after platform margin, COGS and the vendor-funded discount. Runs that overlap the period are counted in full.",
         totals: { dilutive: r(m.dilutive), accretive: r(m.accretive) },
-        promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
+        promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
       } };
     }
     case "market": {
-      const m = await marketModel(c);
+      const m = await marketModel(c, p);
       return { brandId: c.brandId, data: {
-        brand: c.brandName, asOf, latestWeek: m.latestWeek,
-        note: "Segment share = Sprout's share of all sales in that category on that platform, all brands included (a fraction, 0.188 = 18.8%).",
-        wipesSegmentShare: m.wipes.map((s) => ({ platform: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
-        skinCareSegmentShare: m.skin.map((s) => ({ platform: s.name, firstWeek: r(s.share[0], 3), latest: r(s.share[s.share.length - 1], 3) })),
-        topWipesSkus: Object.fromEntries(Object.entries(m.top).map(([k, v]) => [c.nameOf(k), v.slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, subCategory: x.sub, own: x.own }))])),
+        brand: c.brandName, period, latestWeekInPeriod: m.latestWeek,
+        note: "Segment share = Sprout's share of all sales in that category on that platform, all brands included (a fraction, 0.188 = 18.8%), for the weeks in the period. 'before' is the previous period (or the period's first week).",
+        wipesSegmentShare: m.wipesNow.map((x) => ({ platform: x.name, before: x.base === null ? null : r(x.base, 3), now: x.now === null ? null : r(x.now, 3) })),
+        skinCareSegmentShare: m.skinNow.map((x) => ({ platform: x.name, before: x.base === null ? null : r(x.base, 3), now: x.now === null ? null : r(x.now, 3) })),
+        topWipesSkusLatestWeek: Object.fromEntries(Object.entries(m.top).map(([k, v]) => [c.nameOf(k), v.slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, subCategory: x.sub, own: x.own }))])),
         brandSkusNotListed: m.gaps.map((g) => ({ platform: g.name, missing: g.missing })),
       } };
     }
@@ -76,7 +79,7 @@ const SYSTEM = `You are a senior e-commerce and quick-commerce analyst advising 
 
 Method:
 1. Use only the figures provided. Never invent numbers, never estimate figures that are not given. If something cannot be concluded from the data, say so in "watch".
-2. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
+2. The figures cover one reporting period (see "period"). Say which period you are talking about, and use the previous-period figures when given to say what changed. Lead with what matters most in money terms (EGP, ex VAT). Rank actions by size of impact.
 3. Every action must cite the specific figures that justify it, name the platform and SKU or campaign, and say exactly what to do and by when if a date is given.
 4. Separate facts (from the data) from judgement (your recommendation). Flag assumptions and uncertainty plainly.
 5. Treat each platform on its own economics. Call Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast "platforms", never "channels". Amazon Core (large fulfilment centres, no shelf limit) and Amazon Now (dark stores with limited shelf space) are two separate platforms.
@@ -109,7 +112,7 @@ const SCHEMA = {
 };
 
 // Bump when the prompt or request settings change, so saved results from older settings are not reused.
-const PROMPT_VERSION = "2";
+const PROMPT_VERSION = "3";
 
 function parseInsight(text: string): Insight | null {
   const a = text.indexOf("{"), b = text.lastIndexOf("}");
@@ -125,9 +128,9 @@ function parseInsight(text: string): Insight | null {
   } catch { return null; }
 }
 
-export async function analyze(module: ModuleName, force = false): Promise<AnalysisResult> {
+export async function analyze(module: ModuleName, force = false, view?: string, periodKey?: string): Promise<AnalysisResult> {
   const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
-  const p = await payload(module);
+  const p = await payload(module, view, periodKey);
   if (!p) return { ok: false, error: "No data to analyse yet. Upload the Brand Master and the platform files first." };
   const body = JSON.stringify(p.data);
   const hash = createHash("sha256").update(PROMPT_VERSION + module + model + body).digest("hex");

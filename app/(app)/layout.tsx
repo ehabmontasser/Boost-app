@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Nav from "@/components/Nav";
 import { requireSession } from "@/lib/auth";
 
@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </div>
           <span>BOOST</span>
         </div>
-        <Nav admin={s.role === "admin"} />
+        <Suspense fallback={null}><Nav admin={s.role === "admin"} /></Suspense>
         <div className="sidefoot">
           <span>{s.role === "admin" ? "Account manager" : "Brand view (read only)"}</span>
           <form action="/api/logout" method="post"><button type="submit">Sign out</button></form>

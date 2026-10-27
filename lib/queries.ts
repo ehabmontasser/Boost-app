@@ -1,5 +1,6 @@
 // Read queries. Written in portable SQL (no vendor functions) so they run on Postgres and on the in-memory test database.
 import { q } from "./db";
+import type { Range } from "./period";
 
 export type Platform = { code: string; name: string; channel_type: string; status: string; sort: number };
 export type Brand = { id: string; name: string };
@@ -13,16 +14,22 @@ export async function getPlatforms(): Promise<Platform[]> {
   return q<Platform>("SELECT code, name, channel_type, status, sort FROM platforms ORDER BY sort");
 }
 
+/** First and last day of daily data: the span the period picker can choose from. */
+export async function dataRange(b: string): Promise<{ min: string | null; max: string | null }> {
+  const r = await q<{ mn: string | null; mx: string | null }>("SELECT MIN(date) AS mn, MAX(date) AS mx FROM sales_daily WHERE brand_id = $1", [b]);
+  return { min: r[0]?.mn ?? null, max: r[0]?.mx ?? null };
+}
+
 /** Latest date for which every platform that has inventory data has a row (the "data through" date). */
 export async function asOfDate(b: string): Promise<string | null> {
   const r = await q<{ d: string | null }>("SELECT MAX(date) AS d FROM inventory_daily WHERE brand_id = $1", [b]);
   return r[0]?.d ?? null;
 }
 
-export async function salesByPlatform(b: string) {
+export async function salesByPlatform(b: string, r: Range) {
   return q<{ platform: string; net: number; gross: number; units: number; orders: number }>(
     `SELECT platform, SUM(net_gmv) AS net, SUM(gross_gmv) AS gross, SUM(units_sold) AS units, SUM(orders) AS orders
-     FROM sales_daily WHERE brand_id = $1 GROUP BY platform`, [b]);
+     FROM sales_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform`, [b, r.from, r.to]);
 }
 
 export async function salesDaily(b: string) {
@@ -31,23 +38,23 @@ export async function salesDaily(b: string) {
      FROM sales_daily WHERE brand_id = $1 GROUP BY platform, date ORDER BY date`, [b]);
 }
 
-export async function adsByPlatform(b: string) {
+export async function adsByPlatform(b: string, r: Range) {
   return q<{ platform: string; spend: number; att: number }>(
     `SELECT platform, SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att
-     FROM ads_daily WHERE brand_id = $1 GROUP BY platform`, [b]);
+     FROM ads_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform`, [b, r.from, r.to]);
 }
 
 /** Demand that could not be served because of stockouts, valued at the selling price of the day. */
-export async function lostByPlatform(b: string) {
+export async function lostByPlatform(b: string, r: Range) {
   return q<{ platform: string; units: number; value: number }>(
     `SELECT i.platform, SUM(i.unfilled_demand_units) AS units, SUM(i.unfilled_demand_units * p.selling_price) AS value
      FROM inventory_daily i
      JOIN price_promo_daily p ON p.brand_id = i.brand_id AND p.platform = i.platform
        AND p.date = i.date AND p.platform_sku_id = i.platform_sku_id
-     WHERE i.brand_id = $1 GROUP BY i.platform`, [b]);
+     WHERE i.brand_id = $1 AND i.date >= $2 AND i.date <= $3 GROUP BY i.platform`, [b, r.from, r.to]);
 }
 
-export async function lostBySku(b: string) {
+export async function lostBySku(b: string, r: Range) {
   return q<{ platform: string; platform_sku_id: string; units: number; value: number; oos_hours: number; op_hours: number }>(
     `SELECT i.platform, i.platform_sku_id, SUM(i.unfilled_demand_units) AS units,
             SUM(i.unfilled_demand_units * p.selling_price) AS value,
@@ -55,7 +62,7 @@ export async function lostBySku(b: string) {
      FROM inventory_daily i
      JOIN price_promo_daily p ON p.brand_id = i.brand_id AND p.platform = i.platform
        AND p.date = i.date AND p.platform_sku_id = i.platform_sku_id
-     WHERE i.brand_id = $1 GROUP BY i.platform, i.platform_sku_id`, [b]);
+     WHERE i.brand_id = $1 AND i.date >= $2 AND i.date <= $3 GROUP BY i.platform, i.platform_sku_id`, [b, r.from, r.to]);
 }
 
 export async function listings(b: string) {
@@ -82,10 +89,10 @@ export async function inventoryOn(b: string, date: string) {
      FROM inventory_daily WHERE brand_id = $1 AND date = $2`, [b, date]);
 }
 
-export async function salesRateSince(b: string, since: string) {
+export async function salesRateSince(b: string, since: string, until: string) {
   return q<{ platform: string; platform_sku_id: string; region: string; units: number; oos_cancel: number }>(
     `SELECT platform, platform_sku_id, region, SUM(units_sold) AS units, SUM(cancelled_units_oos) AS oos_cancel
-     FROM sales_daily WHERE brand_id = $1 AND date >= $2 GROUP BY platform, platform_sku_id, region`, [b, since]);
+     FROM sales_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform, platform_sku_id, region`, [b, since, until]);
 }
 
 export async function regionNodeMap(b: string) {
@@ -104,32 +111,33 @@ export async function replenishmentParams(b: string) {
      FROM replenishment_params WHERE brand_id = $1`, [b]);
 }
 
-export async function poPerformance(b: string) {
+/** Weekly service rows whose week starts inside the range. */
+export async function poPerformance(b: string, r: Range) {
   return q<{ platform: string; platform_sku_id: string; requested: number; confirmed: number; received: number; lead: number; orders: number; lost_oos: number }>(
     `SELECT platform, platform_sku_id, SUM(po_units_requested) AS requested, SUM(po_units_confirmed) AS confirmed,
             SUM(po_units_received) AS received, AVG(avg_lead_time_days) AS lead,
             SUM(customer_orders) AS orders, SUM(lost_orders_oos) AS lost_oos
-     FROM service_weekly WHERE brand_id = $1 GROUP BY platform, platform_sku_id`, [b]);
+     FROM service_weekly WHERE brand_id = $1 AND week_start >= $2 AND week_start <= $3 GROUP BY platform, platform_sku_id`, [b, r.from, r.to]);
 }
 
 // ---------- ads ----------
-export async function adsByCampaign(b: string) {
+export async function adsByCampaign(b: string, r: Range) {
   return q<{ platform: string; campaign_id: string; campaign_name: string; ad_type: string; objective: string; spend: number; att: number; clicks: number; impressions: number; lost_w: number; budget_days: number }>(
     `SELECT platform, campaign_id, MAX(campaign_name) AS campaign_name, MAX(ad_type) AS ad_type, MAX(objective) AS objective,
             SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att, SUM(clicks) AS clicks, SUM(impressions) AS impressions,
             SUM(impression_share_lost_budget * ad_spend) AS lost_w, COUNT(*) AS budget_days
-     FROM ads_daily WHERE brand_id = $1 GROUP BY platform, campaign_id`, [b]);
+     FROM ads_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform, campaign_id`, [b, r.from, r.to]);
 }
 
-export async function adSpendOnSuppressed(b: string) {
+export async function adSpendOnSuppressed(b: string, r: Range) {
   return q<{ platform: string; spend: number; att: number }>(
     `SELECT a.platform, SUM(a.ad_spend) AS spend, SUM(a.attributed_sales_7d) AS att
      FROM ads_daily a
-     WHERE a.brand_id = $1 AND EXISTS (
+     WHERE a.brand_id = $1 AND a.date >= $2 AND a.date <= $3 AND EXISTS (
        SELECT 1 FROM inventory_daily i
        WHERE i.brand_id = a.brand_id AND i.platform = a.platform AND i.date = a.date
          AND i.platform_sku_id = a.platform_sku_id AND i.listing_status = 'SUPPRESSED')
-     GROUP BY a.platform`, [b]);
+     GROUP BY a.platform`, [b, r.from, r.to]);
 }
 
 // ---------- promotions ----------
