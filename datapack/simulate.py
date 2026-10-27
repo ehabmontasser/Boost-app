@@ -1,4 +1,4 @@
-"""Sprout Baby Care: 52-week simulation across Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast.
+"""Sprout Baby Care: two-year (104-week) simulation across Talabat Mart, Noon, Amazon Core, Amazon Now and Breadfast.
 
 The scripted demo storylines live in the last 14 weeks (from ANCHOR). Growth, market share and the
 stock overrides are anchored there, so the earlier months build up to the same end position.
@@ -23,6 +23,7 @@ WEEKS = [spec.START + timedelta(days=7 * i) for i in range(NT // 7)]
 
 
 ANCHOR = date(2026, 7, 20)   # start of the scripted storylines; growth and share are anchored here
+YEAR2 = date(2025, 10, 27)   # start of the second year: growth before it is calmer
 
 
 def idx(d):
@@ -60,17 +61,19 @@ SKU = {s[0]: dict(code=s[0], name=s[1], cat=s[2], sub=s[3], pack=s[4], price=flo
 SKU_CODES = [s[0] for s in SKUS]
 PRICE_STEP = date(2026, 9, 1)     # +6% list price increase on all platforms
 PRICE_STEP_PCT = 0.06
-PRICE_STEPS = [(date(2026, 3, 1), 0.08), (PRICE_STEP, PRICE_STEP_PCT)]   # list prices are current (after both)
+PRICE_STEPS = [(date(2025, 2, 1), 0.10), (date(2026, 3, 1), 0.08), (PRICE_STEP, PRICE_STEP_PCT)]   # list prices are current (after all)
 
 
 def season(P, d):
     """Demand multiplier for the calendar: Ramadan, the two Eids, summer and the year-end events."""
     qc = PLAT[P]["ptype"] == "Quick commerce"
-    if date(2026, 3, 20) <= d <= date(2026, 3, 22) or date(2026, 5, 26) <= d <= date(2026, 5, 29):
+    eids = [(date(2025, 3, 30), date(2025, 4, 1)), (date(2025, 6, 6), date(2025, 6, 9)),
+            (date(2026, 3, 20), date(2026, 3, 22)), (date(2026, 5, 26), date(2026, 5, 29))]
+    if any(a <= d <= b for a, b in eids):
         return 0.82                                   # Eid al-Fitr, Eid al-Adha: shopping pauses
-    if date(2026, 2, 18) <= d <= date(2026, 3, 19):
+    if date(2025, 3, 1) <= d <= date(2025, 3, 29) or date(2026, 2, 18) <= d <= date(2026, 3, 19):
         return 1.10 if qc else 0.97                   # Ramadan: quick commerce up, marketplaces softer
-    if date(2025, 11, 20) <= d <= date(2025, 11, 30):
+    if date(2024, 11, 21) <= d <= date(2024, 11, 30) or date(2025, 11, 20) <= d <= date(2025, 11, 30):
         return 1.0 if qc else 1.12                    # Yellow / White Friday traffic on marketplaces
     if d.month in (6, 7, 8):
         return 1.04                                   # summer: travel and heat lift wipes
@@ -79,7 +82,7 @@ def season(P, d):
     return 1.0
 
 
-def monthly(day_from, day_to, first=date(2025, 11, 1), last=date(2026, 10, 31)):
+def monthly(day_from, day_to, first=date(2024, 11, 1), last=date(2026, 10, 31)):
     """Windows on the same days of every month, e.g. the 1st to the 5th."""
     out, y, m = [], first.year, first.month
     while date(y, m, 1) <= last:
@@ -311,14 +314,14 @@ INIT_COVER = {("Amazon Core", "SBC-05"): 340, ("Amazon Core", "SBC-01"): 85, ("N
 
 # Lead time shocks: (platform, sku, node or '*') -> list of (placed_from, placed_to, extra_days)
 LT_SHOCK = {
-    ("Talabat Mart", "SBC-02", "TLB-GIZ"): [("2026-09-05", "2026-09-13", 12), ("2026-10-18", "2026-10-24", 13)],
-    ("Talabat Mart", "SBC-02", "TLB-CAI-E"): [("2026-10-21", "2026-10-24", 10)],
+    ("Talabat Mart", "SBC-02", "TLB-GIZ"): [("2026-09-05", "2026-09-13", 12), ("2026-10-20", "2026-10-24", 13)],
+    ("Talabat Mart", "SBC-02", "TLB-CAI-E"): [("2026-10-22", "2026-10-24", 10)],
     ("Noon", "SBC-09", "*"): [("2026-08-25", "2026-10-25", 3)],
 }
 # PO confirmation (share of requested units the platform confirms): (platform, sku) -> [(from, to, rate)]
 CONFIRM_SHOCK = {
     ("Noon", "SBC-09"): [("2026-08-25", "2026-10-25", 0.70)],
-    ("Amazon Core", "SBC-02"): [("2025-10-27", "2026-10-25", 0.88)],
+    ("Amazon Core", "SBC-02"): [("2024-10-28", "2026-10-25", 0.88)],
 }
 # Forced PO events (automatic reorders that should not have happened)
 FORCED_PO = {
@@ -387,6 +390,36 @@ SUB_MULT["Breadfast"] = {"Baby": 1.0, "Fresh": 1.6, "Antibacterial": 2.0, "Shamp
 TARGET_SHARE.update({("Amazon Now", "Wipes"): 0.13, ("Amazon Now", "Skin Care"): 0.10,
                      ("Breadfast", "Wipes"): 0.15, ("Breadfast", "Skin Care"): 0.08})
 CAT_GROWTH.update({"Amazon Now": 0.020, "Breadfast": 0.018})
+
+
+def comp_price(d):
+    lvl = lambda x: np.prod([1 + pct * 0.5 for s, pct in PRICE_STEPS if x >= s])
+    return lvl(d) / lvl(ANCHOR)
+
+
+def add_prior_year(promos):
+    """Repeats each dated event one year earlier (Ramadan follows the lunar calendar, 354 days)."""
+    for plist in promos.values():
+        for pr in plist:
+            if pr.get("weekend") or "windows" not in pr:
+                continue
+            have = set(pr["windows"])
+            extra = []
+            for a, b in pr["windows"]:
+                a_, b_ = date.fromisoformat(a), date.fromisoformat(b)
+                if a_ < YEAR2:
+                    continue
+                if "Ramadan" in pr["name"]:
+                    a0, b0 = a_ - timedelta(days=354), b_ - timedelta(days=354)
+                else:
+                    a0, b0 = a_.replace(year=a_.year - 1), b_.replace(year=b_.year - 1)
+                w = (a0.isoformat(), b0.isoformat())
+                if a0 >= spec.START and w not in have:
+                    extra.append(w); have.add(w)
+            pr["windows"] = sorted(extra + list(pr["windows"]))
+
+
+add_prior_year(PROMOS)
 
 
 def dow_factors(amp):
@@ -497,7 +530,9 @@ def build(seed=SEED):
         dow = dow_factors(cfg["dow_amp"])
         shock = rng.lognormal(0, 0.05, NT)
         D = {s: {} for s in skus}
-        base_t = np.array([(1 + cfg["growth"]) ** ((t - ta) / 7) for t in range(NT)])
+        t1 = idx(YEAR2)
+        g1 = lambda t: (1 + cfg["growth"]) ** ((t - ta) / 7)
+        base_t = np.array([g1(t) if t >= t1 else g1(t1) * (1 + cfg["growth"] * 0.5) ** ((t - t1) / 7) for t in range(NT)])
         pay_t = np.array([cfg["payday"] if (DAYS[t].day >= 25 or DAYS[t].day <= 3) else 1.0 for t in range(NT)])
         dow_t = np.array([dow[DAYS[t].weekday()] for t in range(NT)])
         price_lvl = lambda t: np.prod([(1 + pct) ** (-0.5) for d, pct in PRICE_STEPS if t >= idx(d)])
@@ -795,12 +830,16 @@ def build(seed=SEED):
         for cat in ["Wipes", "Skin Care"]:
             sp_cat = wk_sku[wk_sku["_s"].map(lambda x: SKU[x]["cat"] == cat)].groupby("_w")["gmv"].sum()
             c0 = float(sp_cat.iloc[wa]) / TARGET_SHARE[(P, cat)]
-            # before ANCHOR the category grows a little slower than Sprout (share builds up); after it, faster (share slips)
-            g_pre = PLAT[P]["growth"] - 0.002
+            # before ANCHOR the category grows a little slower than Sprout (share builds up); after it, faster (share slips).
+            # In the first year everything grows at half pace.
+            w1 = idx(YEAR2) // 7
+            rate = [CAT_GROWTH[P] if w >= wa else PLAT[P]["growth"] - 0.002 if w >= w1 else PLAT[P]["growth"] * 0.5 - 0.001 for w in range(len(WEEKS))]
+            G = np.ones(len(WEEKS))
+            for w in range(wa + 1, len(WEEKS)): G[w] = G[w - 1] * (1 + rate[w])
+            for w in range(wa - 1, -1, -1): G[w] = G[w + 1] / (1 + rate[w + 1])
             comps = [(i, c) for i, c in enumerate(COMP) if c[2] == cat and not (P in SMALL_PACK_CHANNELS and ("3x" in c[1] or "500ml" in c[1]))]
             for w in range(len(WEEKS)):
-                g = CAT_GROWTH[P] if w >= wa else g_pre
-                total = c0 * (1 + g) ** (w - wa) * seas_w[w] / seas_w[wa] * mrng.lognormal(0, 0.015)
+                total = c0 * G[w] * seas_w[w] / seas_w[wa] * mrng.lognormal(0, 0.015)
                 sprout = float(sp_cat.get(w, 0.0))
                 pool = max(total - sprout, 0.5 * total)
                 total = sprout + pool
@@ -809,7 +848,7 @@ def build(seed=SEED):
                 tail = pool * (1 - NAMED_SHARE_OF_POOL)
                 rows = []   # (brand, product, sub, price, value, units, id, gtin, own, instock, sku_code)
                 for (i, c), v in zip(comps, named):
-                    pr_ = c[4] * (1 + mrng.normal(0, 0.01)) * (0.96 if WEEKS[w] < PRICE_STEPS[0][0] else 1.0 if WEEKS[w] < PRICE_STEP else 1.03)
+                    pr_ = c[4] * (1 + mrng.normal(0, 0.01)) * comp_price(WEEKS[w])
                     rows.append(dict(brand=c[0], product=c[1], sub=c[3], price=pr_, gmv=float(v),
                                      units=int(round(v / pr_)), id=comp_ids[(P, i)], gtin=comp_gtin[i], own="N",
                                      instock=float(np.clip(mrng.normal(0.985 if c[0] == "Nuvo Baby" else 0.955, 0.02), 0.85, 1.0)),

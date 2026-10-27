@@ -8,7 +8,7 @@ from datetime import date
 
 BRAND = "Sprout Baby Care"
 BRAND_CODE = "SBC"
-START = date(2025, 10, 27)         # Monday, 52 weeks before END
+START = date(2024, 10, 28)         # Monday, 104 weeks (two years) before END
 END = date(2026, 10, 25)           # Sunday
 BACKFILL_END = date(2026, 10, 18)  # Sunday
 UPDATE_START = date(2026, 10, 19)  # Monday
