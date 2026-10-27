@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAsk } from "./AskProvider";
+import { useReview } from "./ReviewProvider";
 
 const brandLinks = [
   ["/overview", "Overview"], ["/replenishment", "Replenishment"], ["/ads", "Ads budget"],
@@ -13,8 +14,12 @@ const adminLinks = [["/admin/upload", "Upload center"], ["/admin/log", "Ingestio
 export default function Nav({ admin }: { admin: boolean }) {
   const path = usePathname();
   const ask = useAsk();
-  // Ask BOOST keeps working in the background: show its state next to the link
-  const badge = (href: string) => href !== "/ask" || !ask ? null : ask.busy ? <span className="navbadge busy">working</span> : ask.unseen ? <span className="navbadge">new</span> : null;
+  const review = useReview();
+  // the agents keep working in the background: show their state next to their links
+  const badge = (href: string) => {
+    const a = href === "/ask" ? ask : href === "/review" ? review : null;
+    return !a ? null : a.busy ? <span className="navbadge busy">working</span> : a.unseen ? <span className="navbadge">new</span> : null;
+  };
   // keep the chosen reporting period when moving between dashboards
   const sp = useSearchParams();
   const keep = new URLSearchParams();

@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import Nav from "@/components/Nav";
 import AskProvider from "@/components/AskProvider";
+import ReviewProvider from "@/components/ReviewProvider";
 import { DEMO_PER_SESSION } from "@/lib/agent/context";
 import { requireSession } from "@/lib/auth";
 
@@ -10,6 +11,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const s = await requireSession();
   return (
     <AskProvider role={s.role} perSession={DEMO_PER_SESSION}>
+    <ReviewProvider role={s.role}>
     <div className="shell">
       <aside className="side">
         <div className="brandmark">
@@ -26,6 +28,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </aside>
       <main className="main">{children}</main>
     </div>
+    </ReviewProvider>
     </AskProvider>
   );
 }
