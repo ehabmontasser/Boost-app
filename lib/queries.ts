@@ -200,3 +200,16 @@ export async function mappingQueue(b: string) {
     `SELECT platform, platform_sku_id, gtin, first_seen_file, status FROM sku_mapping_queue
      WHERE brand_id = $1 AND status = 'open' ORDER BY platform, platform_sku_id`, [b]);
 }
+
+// ---------- agent: product-level views ----------
+export async function salesBySku(b: string, r: Range) {
+  return q<{ platform: string; platform_sku_id: string; net: number; units: number }>(
+    `SELECT platform, platform_sku_id, SUM(net_gmv) AS net, SUM(units_sold) AS units
+     FROM sales_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform, platform_sku_id`, [b, r.from, r.to]);
+}
+
+export async function adsBySku(b: string, r: Range) {
+  return q<{ platform: string; platform_sku_id: string; campaign_name: string; spend: number; att: number }>(
+    `SELECT platform, platform_sku_id, campaign_name, SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att
+     FROM ads_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform, platform_sku_id, campaign_name`, [b, r.from, r.to]);
+}

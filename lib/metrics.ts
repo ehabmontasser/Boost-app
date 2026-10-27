@@ -337,7 +337,7 @@ export async function promoModel(c: Ctx, p: Period) {
   const rows = [...aggs.values()].map((a) => ({
     platform: a.platform, name: c.nameOf(a.platform), promo: a.promo, type: a.type, funding: a.funding,
     depth: a.w ? a.depthW / a.w : 0, vendorShare: a.w ? a.vsW / a.w : 0, uplift: a.base ? a.during / a.base : 0,
-    effect: a.effect, skus: a.skus.size, days: a.days, runs: a.runs,
+    effect: a.effect, skus: a.skus.size, days: a.days, runs: a.runs, skuCodes: [...a.skus],
   })).sort((x, y) => x.effect - y.effect);
   return {
     rows, dilutive: rows.filter((r) => r.effect < 0).reduce((a, r) => a + r.effect, 0), accretive: rows.filter((r) => r.effect > 0).reduce((a, r) => a + r.effect, 0),

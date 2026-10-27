@@ -16,7 +16,7 @@ export type AnalysisResult = { ok: true; insight: Insight | null; raw?: string; 
 
 const r = (n: number, d = 0) => Math.round(n * 10 ** d) / 10 ** d;
 
-async function payload(module: ModuleName, query: PeriodQuery): Promise<{ brandId: string; data: unknown } | null> {
+export async function payload(module: ModuleName, query: PeriodQuery): Promise<{ brandId: string; data: unknown } | null> {
   const c = await getCtx();
   if (!c || !c.asOf || !c.minDate) return null;
   const p = resolvePeriod(query, c.minDate, c.asOf);
