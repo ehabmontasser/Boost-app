@@ -29,6 +29,7 @@ export async function payload(module: ModuleName, query: PeriodQuery): Promise<{
         note: "All figures cover the period only. wipesSegmentShare = Sprout's share of all wipes sales on that platform, all brands included (a fraction, 0.188 = 18.8%). It is market share, not a share of Sprout's own sales. wipesSegmentShareBefore = the previous period (or the period's first week).",
         totals: { netSales: r(m.totalNet), adSpend: r(m.totalSpend), adSpendPct: r(m.spendPct, 3), lostDemand: r(m.totalLost), lostDemandPct: r(m.lostPct, 3) },
         previousPeriodTotals: m.prevTotals ? { netSales: r(m.prevTotals.net), adSpend: r(m.prevTotals.spend), lostDemand: r(m.prevTotals.lost) } : null,
+        wipesSegmentShareAllPlatforms: { note: "blended: Sprout wipes sales / all-brand wipes sales, summed over the 5 platforms", now: m.market.wipesBlended.now === null ? null : r(m.market.wipesBlended.now, 3), before: m.market.wipesBlended.base === null ? null : r(m.market.wipesBlended.base, 3) },
         platforms: m.rows.map((x) => ({ platform: x.name, platformType: x.channel, netSales: r(x.net), netSalesPreviousPeriod: x.prevNet === null ? null : r(x.prevNet), adSpend: r(x.spend), roas: r(x.roas, 2), lostDemand: r(x.lostValue), lostPct: r(x.lostPct, 3), wipesSegmentShareBefore: x.wipesBase === null ? null : r(x.wipesBase, 3), wipesSegmentShare: x.wipesNow === null ? null : r(x.wipesNow, 3) })),
       } };
     }

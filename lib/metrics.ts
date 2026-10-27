@@ -76,6 +76,20 @@ export async function marketModel(c: Ctx, p: Period) {
     now: p.view === "year" ? shareOf(pl.code, category, periodWeeks.slice(-1)) : shareOf(pl.code, category, periodWeeks),
     base: p.prev ? shareOf(pl.code, category, prevWeeks) : p.view === "year" && periodWeeks.length > 1 ? shareOf(pl.code, category, periodWeeks.slice(0, 1)) : null,
   })).filter((s) => s.now !== null);
+  // blended share across all active platforms: Sprout sales / category sales, both summed over the platforms
+  // (weights each platform by the size of its category, unlike an average of the platform shares)
+  const active = new Set(c.platforms.map((pl) => pl.code));
+  const blendedOf = (category: string, weeks: string[]) => {
+    const ws = new Set(weeks);
+    const pick = (r: { platform: string; week_start: string; category: string }) => active.has(r.platform) && ws.has(r.week_start) && r.category === category;
+    const t = cat.filter(pick).reduce((a, r) => a + num(r.gmv), 0);
+    const o = own.filter(pick).reduce((a, r) => a + num(r.gmv), 0);
+    return t > 0 ? o / t : null;
+  };
+  const blended = (category: string) => ({
+    now: p.view === "year" ? blendedOf(category, periodWeeks.slice(-1)) : blendedOf(category, periodWeeks),
+    base: p.prev ? blendedOf(category, prevWeeks) : p.view === "year" && periodWeeks.length > 1 ? blendedOf(category, periodWeeks.slice(0, 1)) : null,
+  });
 
   // trend charts: 13 weeks (week), 12 months (month), 8 quarters (quarter), weeks of the range (YTD, custom up to
   // 26 weeks) or months (longer custom ranges and the full period)
@@ -126,7 +140,7 @@ export async function marketModel(c: Ctx, p: Period) {
     missing: c.skus.filter((s) => !listed.get(pl.code)?.has(s.sku_code)).map((s) => shortName(s.product_name)),
   }));
   return {
-    latestWeek, weeks: periodWeeks.length, wipesNow: now("Wipes"), skinNow: now("Skin Care"),
+    latestWeek, weeks: periodWeeks.length, wipesNow: now("Wipes"), skinNow: now("Skin Care"), wipesBlended: blended("Wipes"),
     wipes: trend("Wipes"), skin: trend("Skin Care"),
     trendStart: buckets[0]?.label ?? null, trendEnd: buckets[buckets.length - 1]?.label ?? null, trendView: p.view,
     subRows, top, gaps,

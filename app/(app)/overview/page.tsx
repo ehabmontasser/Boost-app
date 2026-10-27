@@ -17,9 +17,9 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
   const vs = vsShort(p);
   const change = (now: number, before: number | null | undefined) => { const t = pctChange(now, before); return t ? `${t} ${vs}` : ""; };
   const worst = [...m.rows].sort((a, b) => b.lostPct - a.lostPct)[0];
-  // the platform whose wipes share fell most against the comparison period
-  const drop = [...m.rows].filter((r) => r.wipesNow !== null && r.wipesBase !== null).sort((a, b) => ((a.wipesNow ?? 0) - (a.wipesBase ?? 0)) - ((b.wipesNow ?? 0) - (b.wipesBase ?? 0)))[0];
-  const dropPts = drop ? ((drop.wipesNow ?? 0) - (drop.wipesBase ?? 0)) * 100 : 0;
+  // blended wipes share across all platforms, and its move against the comparison period
+  const wb = m.market.wipesBlended;
+  const movePts = wb.now !== null && wb.base !== null ? (wb.now - wb.base) * 100 : null;
   const base = p.prev ? vs : "since the first week";
   const trendNote = { week: "by week, last 13 weeks", month: "by month, last 12 months", quarter: "by quarter, last 8 quarters", ytd: "by week, year to date", custom: "over the selected dates", year: "by month" }[p.view];
   return (
@@ -31,7 +31,7 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
         <Kpi info="What customers paid after all discounts, excluding VAT, summed across all platforms over the selected period. Net sales = gross sales minus discounts (Sales files). The change compares with the chosen comparison: the previous period or the same period last year." label="Net sales ex VAT" value={egp(m.totalNet)} note={change(m.totalNet, m.prevTotals?.net) || `${m.rows.length} platforms, ${p.short}`} />
         <Kpi info="Total media cost on all platforms over the selected period, excluding VAT (Ads files). The % below is ad spend divided by net sales." label="Ad spend" value={egp(m.totalSpend)} note={`${pct(m.spendPct)} of sales${m.prevTotals ? ` · ${change(m.totalSpend, m.prevTotals.spend)}` : ""}`} />
         <Kpi info="Sales missed because products were out of stock: demand units the platform could not fill (Inventory files) x that day's selling price (Price and Promo files), over the selected period. The % is lost demand divided by net sales. 'Worst' is the platform with the highest %." label="Demand lost to stockouts" value={egp(m.totalLost)} tone="bad" note={`${pct(m.lostPct)} of sales${worst ? ` · worst: ${worst.name} ${pct(worst.lostPct)}` : ""}`} />
-        {drop ? <Kpi info="Sprout's share of all wipes sales on the platform whose share moved down the most: Sprout wipes sales / wipes sales of all brands (Market files), for the weeks in the selected period. The line below compares it with the chosen comparison period (or the first week, for the full period)." label={`Wipes share, ${drop.name}`} value={pct(drop.wipesNow ?? 0)} tone={dropPts < 0 ? "bad" : "good"} note={`${dropPts < 0 ? "Down" : "Up"} ${Math.abs(dropPts).toFixed(1)} pts ${base}`} /> : null}
+        {wb.now !== null ? <Kpi info="Sprout's blended share of wipes across all 5 platforms: Sprout wipes sales on all platforms / wipes sales of all brands on all platforms (Market files), for the weeks in the selected period. Bigger platforms weigh more, so it is not an average of the platform shares. The line below compares it with the chosen comparison period (or the first week, for the full period)." label="Wipes share, all platforms" value={pct(wb.now)} tone={movePts === null ? undefined : movePts < 0 ? "bad" : "good"} note={movePts === null ? "Blended across 5 platforms" : Math.abs(movePts) < 0.05 ? `Flat ${base}` : `${movePts < 0 ? "Down" : "Up"} ${Math.abs(movePts).toFixed(1)} pts ${base}`} /> : null}
       </section>
       <div className="row">
         <section className="card wide">
