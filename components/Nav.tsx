@@ -8,7 +8,7 @@ const brandLinks = [
   ["/overview", "Overview"], ["/replenishment", "Replenishment"], ["/ads", "Ads budget"],
   ["/promotions", "Promotions"], ["/market", "Market segment share"], ["/freshness", "Data freshness"],
 ] as const;
-const agentLinks = [["/review", "Weekly review"], ["/ask", "Ask BOOST"]] as const;
+const agentLinks = [["/review", "Business Review"], ["/ask", "Ask BOOST"]] as const;
 const adminLinks = [["/admin/upload", "Upload center"], ["/admin/log", "Ingestion log"]] as const;
 
 export default function Nav({ admin }: { admin: boolean }) {

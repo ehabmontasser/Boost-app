@@ -3,8 +3,9 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { usePathname, useRouter } from "next/navigation";
 import type { Brief, Step } from "@/lib/agent/engine";
 
-type Saved = { role: string; steps: Step[]; brief: Brief | null; error: string | null; pending: Record<string, unknown> | null };
-type ReviewCtx = { steps: Step[]; brief: Brief | null; error: string | null; busy: boolean; unseen: boolean; run: () => void };
+type Saved = { role: string; steps: Step[]; brief: Brief | null; error: string | null; pending: Record<string, unknown> | null; reportId: string | null; label: string };
+export type ReviewStart = { view: "week" | "month"; p: string; notes: string; label: string };
+type ReviewCtx = { steps: Step[]; brief: Brief | null; error: string | null; busy: boolean; unseen: boolean; reportId: string | null; label: string; run: (start: ReviewStart) => void };
 
 const KEY = "boost_review_v1";
 const Ctx = createContext<ReviewCtx | null>(null);
@@ -37,7 +38,9 @@ export default function ReviewProvider({ role, children }: { role: string; child
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [unseen, setUnseen] = useState(false);
-  const saved = useRef<Saved>({ role, steps: [], brief: null, error: null, pending: null });
+  const [reportId, setReportId] = useState<string | null>(null);
+  const [label, setLabel] = useState("");
+  const saved = useRef<Saved>({ role, steps: [], brief: null, error: null, pending: null, reportId: null, label: "" });
   const running = useRef(false);
   const pathRef = useRef(path);
   pathRef.current = path;
@@ -54,7 +57,12 @@ export default function ReviewProvider({ role, children }: { role: string; child
         const j: any = await post(body);
         if (j.steps?.length) { const all = [...saved.current.steps, ...j.steps]; setSteps(all); save({ steps: all }); }
         if (j.error || !j.state) { const e = j.error ?? "The review stopped."; setError(e); save({ error: e }); break; }
-        if (j.final?.brief) { setBrief(j.final.brief); save({ brief: j.final.brief }); router.refresh(); break; }
+        if (j.final?.brief) {
+          setBrief(j.final.brief); setReportId(j.reportId ?? null); save({ brief: j.final.brief, reportId: j.reportId ?? null });
+          // open the new report if the user is on the Business Review page; otherwise the sidebar badge says it is ready
+          if (pathRef.current === "/review" && j.reportId) router.replace(`/review?report=${j.reportId}`); else router.refresh();
+          break;
+        }
         if (j.state.done) { const e = "The review finished without a brief."; setError(e); save({ error: e }); break; }
         body = { state: j.state, sig: j.sig, tools: saved.current.steps.length };
       }
@@ -71,18 +79,18 @@ export default function ReviewProvider({ role, children }: { role: string; child
     const s = load();
     if (!s || s.role !== role) { store(saved.current); return; }
     saved.current = s;
-    setSteps(s.steps); setBrief(s.brief); setError(s.error);
+    setSteps(s.steps); setBrief(s.brief); setError(s.error); setReportId(s.reportId ?? null); setLabel(s.label ?? "");
     if (s.pending && !s.brief && !s.error) loop(s.pending);
   }, [role, loop]);
 
   useEffect(() => { if (path === "/review") setUnseen(false); }, [path]);
 
-  const run = () => {
+  const run = (start: ReviewStart) => {
     if (running.current) return;
-    saved.current = { role, steps: [], brief: null, error: null, pending: null }; store(saved.current);
-    setSteps([]); setBrief(null); setError(null);
-    loop({});
+    saved.current = { role, steps: [], brief: null, error: null, pending: null, reportId: null, label: start.label }; store(saved.current);
+    setSteps([]); setBrief(null); setError(null); setReportId(null); setLabel(start.label);
+    loop({ start: { view: start.view, p: start.p, notes: start.notes } });
   };
 
-  return <Ctx.Provider value={{ steps, brief, error, busy, unseen, run }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ steps, brief, error, busy, unseen, reportId, label, run }}>{children}</Ctx.Provider>;
 }

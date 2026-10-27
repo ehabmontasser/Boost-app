@@ -6,7 +6,7 @@ import { newState, runSteps, verifyState, type AgentState } from "@/lib/agent/en
 import { agentDates, demoQuestionsToday, DEMO_PER_DAY, DEMO_PER_SESSION, logQuestion } from "@/lib/agent/context";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300; // Vercel Hobby maximum with Fluid compute
 
 const ASK_COOKIE = "boost_asks";
 const secret = () => process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 16 ? process.env.SESSION_SECRET : "dev-only-secret-change-me";

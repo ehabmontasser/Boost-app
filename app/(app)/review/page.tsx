@@ -1,30 +1,39 @@
 import { requireSession } from "@/lib/auth";
-import { latestBrief } from "@/lib/agent/context";
-import { getBrand } from "@/lib/queries";
-import { dayLabel } from "@/lib/period";
-import { Header, Title } from "@/components/ui";
-import { BriefView } from "@/components/AgentParts";
+import { getReport, listReports, NOTES_MAX } from "@/lib/agent/context";
+import { dataRange, getBrand } from "@/lib/queries";
+import { addDays, periodOptions } from "@/lib/period";
+import { Header } from "@/components/ui";
 import ReviewRunner from "@/components/ReviewRunner";
+import ReportPanel from "@/components/ReportPanel";
 
 export const dynamic = "force-dynamic";
 
-export default async function WeeklyReview() {
+export default async function BusinessReview({ searchParams }: { searchParams: Promise<{ report?: string }> }) {
   const s = await requireSession();
+  const admin = s.role === "admin";
   const brand = await getBrand();
-  const saved = brand ? await latestBrief(brand.id) : null;
-  const when = saved ? new Date(saved.createdAt) : null;
+  const { report: reportId } = await searchParams;
+  const [items, report, span] = brand
+    ? await Promise.all([listReports(brand.id), getReport(brand.id, reportId), dataRange(brand.id)])
+    : [[], null, { min: null, max: null }];
+  // periods an account manager can report on: completed weeks and months first (the usual Monday / month-close reports)
+  let weeks: { key: string; label: string }[] = [], months: { key: string; label: string }[] = [];
+  if (span.min && span.max) {
+    const o = periodOptions(span.min, span.max);
+    weeks = o.week.filter((w) => addDays(w.key, 6) <= span.max!);
+    const closed = o.month.filter((m) => !m.label.includes("("));
+    const open = o.month.filter((m) => m.label.includes("(") && m.key === span.max!.slice(0, 7));
+    months = [...closed, ...open.map((m) => ({ ...m, label: `${m.label}, month to date` }))];
+  }
   return (
     <>
-      <Header title="Weekly review" sub="AI agent · the Monday Commercial Review: every screen for the latest week, compared with last week and the same week last year, with conflicts between screens" />
-      {s.role === "admin" ? <ReviewRunner /> : null}
-      <section className="card">
-        <Title info="The latest brief written by the Monday Commercial Review agent. The agent decides which screens to read (Overview, Replenishment, Ads, Promotions, Market share and a joined product view), compares the latest week with the previous week and the same week last year, and looks for conflicts that single screens cannot show. Every figure comes from the tools; Claude only interprets them.">Latest brief</Title>
-        {saved ? (
-          <BriefView brief={saved.brief} meta={`Written ${when ? `${dayLabel(when.toISOString().slice(0, 10))}, ${when.toISOString().slice(11, 16)} UTC` : ""} · data through ${dayLabel(saved.dataThrough)} · ${saved.tools} tool calls · ${saved.model}`} />
-        ) : (
-          <div className="muted">{s.role === "admin" ? "No review yet. Run the first one above." : "The account manager has not run a weekly review yet."}</div>
-        )}
-      </section>
+      <Header title="Business Review" sub="AI agent · weekly reports for every Monday and monthly reports at month close, for the brand: every screen compared with the previous period and the same period last year, with conflicts between screens and the account manager's notes" />
+      {admin ? <ReviewRunner weeks={weeks} months={months} notesMax={NOTES_MAX} /> : null}
+      {report ? (
+        <ReportPanel key={report.id + report.notes.length} report={report} items={items} admin={admin} brand={brand?.name ?? ""} notesMax={NOTES_MAX} />
+      ) : (
+        <section className="card"><div className="muted">{admin ? "No report yet. Create the first one above." : "The account manager has not shared a business review yet."}</div></section>
+      )}
     </>
   );
 }
