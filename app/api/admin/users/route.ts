@@ -3,7 +3,7 @@ import { getSession, hashPassword, isOwner } from "@/lib/auth";
 import { q, withTx } from "@/lib/db";
 
 /** Owner only. Body: { action: "create", name, email, role, password, brandIds } | { action: "update", id, name, role, brandIds, active }
- *  | { action: "password", id, password }. */
+ *  | { action: "password", id, password } | { action: "brand", name } (adds an empty brand). */
 export async function POST(req: Request) {
   const s = await getSession();
   if (!isOwner(s)) return NextResponse.json({ ok: false, error: "Only the owner can manage users." }, { status: 403 });
@@ -47,6 +47,16 @@ export async function POST(req: Request) {
         await c.query("UPDATE app_users SET name = $2, role = $3, active = $4 WHERE id = $1", [id, name, role, b.active !== false]);
         await setBrands(c, id);
       });
+      return NextResponse.json({ ok: true });
+    }
+    if (b.action === "brand") {
+      if (name.length < 2) return bad("Enter a brand name.");
+      // same code rule as the Brand Master import, so a later Brand Master for this name fills this brand
+      const code = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      if (!code) return bad("Use letters or numbers in the brand name.");
+      const exists = await q("SELECT 1 FROM brands WHERE code = $1 OR lower(name) = lower($2)", [code, name]);
+      if (exists.length) return bad("A brand with this name already exists.");
+      await q("INSERT INTO brands (code, name) VALUES ($1, $2)", [code, name]);
       return NextResponse.json({ ok: true });
     }
     if (b.action === "password") {

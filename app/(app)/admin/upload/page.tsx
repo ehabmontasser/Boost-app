@@ -1,5 +1,6 @@
 import { requireWriter } from "@/lib/auth";
 import { getBrand, getPlatforms, freshness } from "@/lib/queries";
+import { q } from "@/lib/db";
 import spec from "@/lib/spec.json";
 import { dateLabel } from "@/lib/format";
 import { Header, Pill } from "@/components/ui";
@@ -15,6 +16,8 @@ export default async function Upload() {
   const brand = await getBrand();
   const platforms = (await getPlatforms()).filter((p) => p.status === "active");
   const rows = brand ? await freshness(brand.id) : [];
+  // a brand added on the Users page exists before its Brand Master is loaded
+  const loaded = brand ? (await q("SELECT 1 FROM skus WHERE brand_id = $1 LIMIT 1", [brand.id])).length > 0 : false;
   return (
     <>
       <Header title="Upload center" sub="Load the Brand Master once, then the platform files. Upload order: Brand Master, then backfill, then each weekly update." />
@@ -26,9 +29,16 @@ export default async function Upload() {
           <li>Check Data freshness reads &quot;through 18 Oct&quot; on every daily card.</li>
           <li>The 30 weekly files (19 to 25 Oct). Same steps.</li>
         </ol>
-        <div className="muted">Brand Master status: {brand ? <Pill tone="good">Loaded for {brand.name}</Pill> : <Pill tone="warn">Not loaded</Pill>}</div>
+        <div className="muted">Brand Master status: {loaded ? <Pill tone="good">Loaded for {brand!.name}</Pill> : <Pill tone="warn">Not loaded{brand ? ` for ${brand.name}` : ""}</Pill>}</div>
       </section>
-      <UploadCenter setupDone={!!brand} />
+      {brand ? (
+        <section className="card">
+          <h2>Blank templates for {brand.name}</h2>
+          <div className="muted">All 31 files (Brand Master plus six per platform), each with a &quot;How to use&quot; tab, and {brand.name} already filled in on the Meta tab so the upload matches this brand.</div>
+          <div><a className="btn alt" href="/api/templates" download>Download templates for {brand.name}</a></div>
+        </section>
+      ) : null}
+      <UploadCenter setupDone={loaded} />
       <section className="card">
         <h2>What is loaded</h2>
         <div className="tablewrap"><table>

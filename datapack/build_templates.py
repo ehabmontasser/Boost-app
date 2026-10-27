@@ -1,8 +1,9 @@
 """Writes blank upload templates (no data) for the account manager: the Brand Master plus
 six feeds per platform, each with a "How to use" tab first. Built from spec.py, the same
-standard the app validates against. Run: python build_templates.py"""
+standard the app validates against. Run: python build_templates.py   (add --app to refresh the copy the app serves)"""
 import os
 import shutil
+import sys
 import zipfile
 
 import xlsxwriter
@@ -11,6 +12,10 @@ import spec
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 OUT = os.path.join(ROOT, "BOOST_Upload_Templates")
+BRAND = spec.BRAND
+# --app writes a brand-neutral copy into the app (templates/); the app swaps this placeholder for the brand on download
+APP_OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
+APP_PLACEHOLDER = "BOOST_BRAND_NAME"
 MENU = "Admin > Upload center"
 DATA_ROWS = 50000  # rows that get number formats and drop-down lists
 
@@ -39,7 +44,7 @@ SELF_CHECKS = {
                   "gtin on each row matches the barcode in the Brand Master."],
     "PRICE_PROMO": ["gtin on each row matches the barcode in the Brand Master."],
     "ADS": ["Attributed sales for a SKU on a day are not above its net sales that day in the Sales file (a sign of a scaling error)."],
-    "MARKET": ["Sprout's own rows (is_own_brand = Y) are within about 2% of the Sales file for the same week."],
+    "MARKET": ["The brand's own rows (is_own_brand = Y) are within about 2% of the Sales file for the same week."],
     "SERVICE": ["fully_filled_orders_pct is consistent with customer_orders and the lost orders columns."],
 }
 
@@ -209,7 +214,7 @@ def feed_file(platform, code, feed):
             f"Platform_Listings rows for {platform}.",
             "Warning (the file loads, but check it): a platform_sku_id that is not in the Brand Master. The rows are "
             "loaded and the ID is listed in the SKU mapping queue. Expected for competitor products in the Market file; "
-            "for Sprout products, add the listing to the Brand Master and upload it again.",
+            "for the brand's products, add the listing to the Brand Master and upload it again.",
         ] + FEED_CHECKS[feed]),
         ("Check yourself before uploading (BOOST does not check these)", SELF_CHECKS[feed]),
         ("Do not", [
@@ -224,7 +229,7 @@ def feed_file(platform, code, feed):
         ("template_version", spec.TEMPLATE_VERSION, "Do not change."),
         ("feed", feed, "Do not change."),
         ("platform", platform, "Do not change. Must match the platform the rows come from."),
-        ("brand", spec.BRAND, "Do not change."),
+        ("brand", BRAND, "Do not change."),
         ("period_start", None, "FILL IN: first day of the data in this file, yyyy-mm-dd" +
          (" (a Monday)" if fd["freq"] == "Weekly" else "")),
         ("period_end", None, "FILL IN: last day of the data in this file, yyyy-mm-dd" +
@@ -259,7 +264,7 @@ def setup_file():
     f = formats(wb)
     how = wb.add_worksheet("How to use")
     tab_lines = {
-        "SKU_Master": "every Sprout product: code, barcode (gtin), category, list price, cost, case pack.",
+        "SKU_Master": "every product of the brand: code, barcode (gtin), category, list price, cost, case pack.",
         "Platform_Listings": "each product's ID on each platform (Mart item ID, Noon SKU, ASIN). This is how platform files are matched to products.",
         "Nodes": "each platform's warehouses, fulfilment centres and dark-store clusters, with daily selling hours.",
         "Region_Node_Map": "which node serves which customer region, and the share of orders it serves.",
@@ -306,7 +311,7 @@ def setup_file():
     write_meta(wb.add_worksheet("Meta"), f, [
         ("template_id", "BOOST-SETUP-v1.0", "Do not change. Tells BOOST this is the Brand Master."),
         ("template_version", spec.TEMPLATE_VERSION, "Do not change."),
-        ("brand", spec.BRAND, "Do not change."),
+        ("brand", BRAND, "Do not change."),
         ("sheets", ", ".join(sheets), "For information."),
     ])
     guide = []
@@ -319,6 +324,10 @@ def setup_file():
 
 
 def main():
+    global OUT, BRAND
+    app = "--app" in sys.argv
+    if app:
+        OUT, BRAND = APP_OUT, APP_PLACEHOLDER
     if os.path.exists(OUT):
         shutil.rmtree(OUT)
     os.makedirs(os.path.join(OUT, "00_Brand_Master"))
@@ -328,6 +337,9 @@ def main():
     for platform, (code, _) in spec.PLATFORM_FOLDERS.items():
         for feed in spec.FEED_ORDER:
             paths.append(feed_file(platform, code, feed))
+    if app:
+        print(f"{len(paths)} brand-neutral templates in {OUT}")
+        return
     zpath = OUT + ".zip"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
         for p in paths:

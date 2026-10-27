@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type User = { id: string; name: string; email: string; role: "manager" | "brand"; active: boolean; brandIds: string[] };
-type Brand = { id: string; name: string };
+type Brand = { id: string; name: string; loaded?: boolean };
 const ROLE = { manager: "Account manager", brand: "Brand user" };
 
 async function send(body: Record<string, unknown>) {
@@ -18,6 +18,17 @@ export default function UsersAdmin({ users, brands }: { users: User[]; brands: B
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "?";
   return (
     <>
+      <section className="card">
+        <h2>Brands</h2>
+        <div className="muted">Add a brand here, assign it to its account manager, then load its Brand Master and platform files in the Upload center (download the templates for that brand there).</div>
+        <div className="tablewrap"><table>
+          <thead><tr><th>Brand</th><th>Brand Master</th></tr></thead>
+          <tbody>{brands.map((b) => (
+            <tr key={b.id}><td><b>{b.name}</b></td><td>{b.loaded ? <span className="good">Loaded</span> : <span className="muted">Not loaded yet</span>}</td></tr>
+          ))}</tbody>
+        </table></div>
+        <BrandForm onDone={() => router.refresh()} />
+      </section>
       <section className="card">
         <h2>Add a user</h2>
         <UserForm brands={brands} onDone={() => router.refresh()} />
@@ -81,6 +92,17 @@ function UserForm({ brands, user, onDone }: { brands: Brand[]; user?: User; onDo
       </fieldset>
       {user ? <label className="checkline"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Active (can sign in)</label> : null}
       <div className="report-note-actions"><button className="btn" type="submit">{user ? "Save changes" : "Add user"}</button>{msg ? <span className="note">{msg}</span> : null}</div>
+    </form>
+  );
+}
+
+function BrandForm({ onDone }: { onDone: () => void }) {
+  const [name, setName] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  return (
+    <form className="userform" onSubmit={async (e) => { e.preventDefault(); setMsg("Saving..."); const j = await send({ action: "brand", name }); setMsg(j.ok ? "Brand added." : j.error ?? "Could not save."); if (j.ok) { setName(""); onDone(); } }}>
+      <label className="review-field">New brand name (exactly as it will appear in the files)<input className="input" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={80} /></label>
+      <div className="report-note-actions"><button className="btn" type="submit">Add brand</button>{msg ? <span className="note">{msg}</span> : null}</div>
     </form>
   );
 }
