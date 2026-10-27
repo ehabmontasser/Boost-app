@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/auth";
 import { getCtx, marketModel } from "@/lib/metrics";
 import { dateLabel, egp, pct } from "@/lib/format";
-import { Empty, Header, Kpi, Pill } from "@/components/ui";
+import { Empty, Header, Kpi, Pill, Title } from "@/components/ui";
 import { ShareLines } from "@/components/charts";
 import AnalyzeButton from "@/components/AnalyzeButton";
 
@@ -19,22 +19,22 @@ export default async function Market() {
     <>
       <Header title="Market segment share" sub={`Sprout's share of each platform's segment sales · latest week starting ${dateLabel(m.latestWeek)}`} />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Platforms losing wipes share" value={`${falling.length} of ${m.wipes.length}`} tone={falling.length ? "bad" : "good"} note="since week 1" />
-        {worst ? <Kpi label={`Biggest drop: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone="bad" note={`${pct(worst.share[0])} to ${pct(worst.share[worst.share.length - 1])}`} /> : null}
-        <Kpi label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
+        <Kpi info="Platforms where Sprout's wipes share in the latest week is more than 0.5 points below week 1. Share = Sprout wipes sales / wipes sales of all brands on the platform (Market files)." label="Platforms losing wipes share" value={`${falling.length} of ${m.wipes.length}`} tone={falling.length ? "bad" : "good"} note="since week 1" />
+        {worst ? <Kpi info="The platform with the largest fall in Sprout's wipes share from week 1 to the latest week, in percentage points." label={`Biggest drop: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone="bad" note={`${pct(worst.share[0])} to ${pct(worst.share[worst.share.length - 1])}`} /> : null}
+        <Kpi info="Platforms where at least one Sprout product in the SKU master has no listing (Brand Master, Platform_Listings)." label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
       </section>
       <div className="row">
         <section className="card">
-          <h2>Wipes share by platform</h2>
+          <Title info="For each platform and week: Sprout wipes sales / wipes sales of all brands on that platform (Market files).">Wipes share by platform</Title>
           <ShareLines series={m.wipes} label="Wipes share by platform from week 1 to the latest week" />
         </section>
         <section className="card">
-          <h2>Skin care share by platform</h2>
+          <Title info="For each platform and week: Sprout skin care sales / skin care sales of all brands on that platform (Market files).">Skin care share by platform</Title>
           <ShareLines series={m.skin} label="Skin care share by platform from week 1 to the latest week" />
         </section>
       </div>
       <section className="card">
-        <h2>Who leads each platform (wipes, latest week)</h2>
+        <Title info="The top wipes products by sales value on each platform in the latest week (Market files). Sprout's best rank is its highest product within the top 8.">Who leads each platform (wipes, latest week)</Title>
         <div className="tablewrap">
           <table>
             <thead><tr><th>Platform</th><th>#1</th><th>#2</th><th>#3</th><th>Sprout's best rank</th></tr></thead>
@@ -56,7 +56,7 @@ export default async function Market() {
       </section>
       <div className="row">
         <section className="card">
-          <h2>Share by sub-segment (latest week)</h2>
+          <Title info="Sprout sales / sales of all brands in each sub-segment in the latest week, lowest first. 0% means Sprout has no listing or no sales there.">Share by sub-segment (latest week)</Title>
           <div className="tablewrap"><table>
             <thead><tr><th>Platform</th><th>Sub-segment</th><th className="r">Sprout share</th></tr></thead>
             <tbody>{[...m.subRows].sort((a, b) => a.share - b.share).slice(0, 12).map((r, i) => (
@@ -66,7 +66,7 @@ export default async function Market() {
           <div className="muted">Lowest shares first. A sub-segment with zero share is one where Sprout has no listing or no sales.</div>
         </section>
         <section className="card">
-          <h2>Assortment gaps</h2>
+          <Title info="Sprout products in the SKU master that have no listing on the platform (Brand Master, Platform_Listings).">Assortment gaps</Title>
           <div className="tablewrap"><table>
             <thead><tr><th>Platform</th><th>Sprout SKUs not listed</th></tr></thead>
             <tbody>{m.gaps.map((g) => (

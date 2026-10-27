@@ -2,7 +2,7 @@ import { requireSession } from "@/lib/auth";
 import { adsModel } from "@/lib/metrics";
 import { getCtx } from "@/lib/metrics";
 import { egp, pct } from "@/lib/format";
-import { Empty, Header, Kpi, Pill, statusTone } from "@/components/ui";
+import { Empty, Header, Kpi, Pill, statusTone, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +18,13 @@ export default async function Ads() {
     <>
       <Header title="Ads budget" sub="ROAS = attributed 7-day sales / ad spend, all values ex VAT" />
       <section className="kpis" aria-label="Key figures">
-        <Kpi label="Ad spend" value={egp(m.totalSpend)} note="13 weeks, all platforms" />
-        <Kpi label="Blended ROAS" value={m.roas.toFixed(2)} note={`${egp(m.totalAtt)} attributed sales`} />
-        <Kpi label="Spend below target ROAS" value={egp(m.belowSpend)} tone="warn" note={`${pct(m.totalSpend ? m.belowSpend / m.totalSpend : 0, 0)} of all spend`} />
-        <Kpi label="Spent on suppressed listings" value={egp(suppressed)} tone={suppressed ? "bad" : "good"} note={m.suppressed.length ? m.suppressed.map((x) => x.name).join(", ") : "None"} />
+        <Kpi info="Total media cost on all platforms over all weeks loaded (13 weeks now), excluding VAT (Ads files)." label="Ad spend" value={egp(m.totalSpend)} note="13 weeks, all platforms" />
+        <Kpi info="Return on ad spend across all campaigns: sales attributed within 7 days of a click / ad spend, both excluding VAT. A ROAS of 4 means EGP 4 of sales for every EGP 1 spent." label="Blended ROAS" value={m.roas.toFixed(2)} note={`${egp(m.totalAtt)} attributed sales`} />
+        <Kpi info="Spend in campaigns whose ROAS is below their platform's target ROAS (Brand Master, Platform_Terms). The % is of all ad spend." label="Spend below target ROAS" value={egp(m.belowSpend)} tone="warn" note={`${pct(m.totalSpend ? m.belowSpend / m.totalSpend : 0, 0)} of all spend`} />
+        <Kpi info="Ad spend on days when the advertised product's listing was suppressed on that platform (Inventory files), so the ad could not sell it." label="Spent on suppressed listings" value={egp(suppressed)} tone={suppressed ? "bad" : "good"} note={m.suppressed.length ? m.suppressed.map((x) => x.name).join(", ") : "None"} />
       </section>
       <section className="card">
-        <h2>Campaigns</h2>
+        <Title info="One row per campaign over all weeks loaded (13 weeks now). Share of platform = campaign spend / the platform's ad spend. Lost to budget = share of impressions lost because the budget ran out. Signal: Below target if ROAS is under target; Scale if on target and 15% or more of impressions were lost to budget; otherwise On target.">Campaigns</Title>
         <div className="tablewrap">
           <table>
             <thead><tr><th>Platform · campaign</th><th>Type</th><th className="r">Spend</th><th className="r">Share of platform</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Lost to budget</th><th>Signal</th></tr></thead>
@@ -48,7 +48,7 @@ export default async function Ads() {
       </section>
       {m.suppressed.length ? (
         <section className="card">
-          <h2>Ad spend on suppressed listings</h2>
+          <Title info="Ad spend and attributed sales on days the advertised listing was suppressed, by platform.">Ad spend on suppressed listings</Title>
           <div className="tablewrap"><table>
             <thead><tr><th>Platform</th><th className="r">Spend</th><th className="r">Attributed sales</th></tr></thead>
             <tbody>{m.suppressed.map((x) => (<tr key={x.platform}><td><b>{x.name}</b></td><td className="r bad">{egp(x.spend, false)}</td><td className="r">{egp(x.att, false)}</td></tr>))}</tbody>

@@ -35,6 +35,17 @@ h2 { font-size: 20px; font-weight: 600; }
 .kpi .l { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
 .kpi .v { font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1.1; }
 .kpi .d { font-size: 13px; color: var(--ink-2); }
+.kpi .l { display: flex; align-items: center; gap: 6px; }
+.title-info { display: flex; align-items: center; gap: 8px; }
+
+/* Info icon and its explanation bubble */
+.infotip { position: relative; display: inline-flex; align-items: center; }
+.infotip-btn { all: unset; display: inline-flex; color: var(--muted); cursor: pointer; border-radius: 50%; padding: 2px; }
+.infotip-btn:hover, .infotip-btn[aria-expanded="true"] { color: var(--blue); }
+.infotip-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.infotip-pop { position: absolute; top: calc(100% + 8px); left: -8px; z-index: 50; width: max-content; max-width: min(290px, 80vw);
+  background: var(--ink); color: #fff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(16, 25, 35, .22);
+  font-family: var(--font-body); font-size: 13px; font-weight: 400; line-height: 1.45; letter-spacing: normal; text-transform: none; white-space: normal; }
 .bad { color: var(--red); font-weight: 500; } .good { color: var(--teal); font-weight: 500; } .warn { color: var(--amber); font-weight: 500; } .info { color: #1a3fb5; font-weight: 500; }
 .row { display: flex; flex-wrap: wrap; gap: 24px; }
 .row > .card { flex: 1 1 420px; }

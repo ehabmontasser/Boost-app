@@ -1,13 +1,19 @@
 import type { ReactNode } from "react";
+import InfoTip from "./InfoTip";
 
-export function Kpi({ label, value, note, tone }: { label: string; value: string; note?: ReactNode; tone?: "bad" | "good" | "warn" | "info" }) {
+export function Kpi({ label, value, note, tone, info }: { label: string; value: string; note?: ReactNode; tone?: "bad" | "good" | "warn" | "info"; info?: string }) {
   return (
     <div className="kpi">
-      <div className="l">{label}</div>
+      <div className="l">{label}{info ? <InfoTip label={label} text={info} /> : null}</div>
       <div className="v">{value}</div>
       {note ? <div className={"d " + (tone ?? "")}>{note}</div> : null}
     </div>
   );
+}
+
+/** Card heading with an info icon that explains the figures in the card. */
+export function Title({ children, info }: { children: string; info: string }) {
+  return <h2 className="title-info">{children}<InfoTip label={children} text={info} /></h2>;
 }
 
 export function Pill({ tone, children }: { tone: "good" | "warn" | "bad" | "info" | "mute"; children: ReactNode }) {
