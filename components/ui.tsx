@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import InfoTip from "./InfoTip";
-import { pct } from "@/lib/format";
+import { egp, pct } from "@/lib/format";
 
 export function Kpi({ label, value, note, tone, info }: { label: string; value: string; note?: ReactNode; tone?: "bad" | "good" | "warn" | "info"; info?: string }) {
   return (
@@ -72,5 +72,38 @@ export function SubSegmentTable({ rows, withPlatform }: { rows: { name: string; 
         );
       })}</tbody>
     </table></div>
+  );
+}
+
+type CampaignRow = { platform: string; name: string; id: string; campaign: string; type: string; objective: string; spend: number; roas: number; target: number; lostShare: number; spendShare: number; flag: string };
+/** What to do with a campaign, in plain words (the model's flag stays the same for Claude). */
+export const campaignAction = (flag: string) => (flag.startsWith("Scale") ? "Add budget" : flag === "Below target" ? "Fix or cut" : "Keep");
+
+/** Campaign table for Performance Marketing and Platform Analysis, biggest spend first, with a key under it. */
+export function CampaignTable({ rows, withPlatform }: { rows: CampaignRow[]; withPlatform?: boolean }) {
+  return (
+    <>
+      <div className="tablewrap"><table className="camp">
+        <thead><tr><th>{withPlatform ? "Platform · campaign" : "Campaign"}</th><th className="r">Spend</th><th className="r">Share of platform</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Views missed</th><th>Action</th></tr></thead>
+        <tbody>{rows.length === 0 ? <tr><td colSpan={7} className="muted">No ad spend in this period.</td></tr> : rows.map((r) => (
+          <tr key={r.platform + r.id}>
+            <td>{withPlatform ? <><b>{r.name}</b><div>{r.campaign}</div></> : <b>{r.campaign}</b>}<div className="muted">{r.type} · {r.objective}</div></td>
+            <td className="r">{egp(r.spend)}</td>
+            <td className="r">{pct(r.spendShare, 0)}</td>
+            <td className={"r " + (r.roas < r.target ? "bad" : "good")}><b>{r.roas.toFixed(2)}</b></td>
+            <td className="r">{r.target.toFixed(2)}</td>
+            <td className="r">{pct(r.lostShare, 0)}</td>
+            <td><Pill tone={r.flag.startsWith("Scale") ? "info" : statusTone(r.flag)}>{campaignAction(r.flag)}</Pill></td>
+          </tr>
+        ))}</tbody>
+      </table></div>
+      <ul className="table-key">
+        <li><b>Order:</b> biggest spend first.</li>
+        <li><b>ROAS:</b> sales from the ads (within 7 days of a click) divided by ad spend. 4.0 means EGP 4 of sales for every EGP 1 spent. Green when it meets the target, red when it misses.</li>
+        <li><b>Target:</b> the target ROAS, the minimum return agreed for each platform, set by the account manager in the Brand Master (Platform terms tab). It is the same for every campaign on a platform.</li>
+        <li><b>Views missed:</b> out of all the times the platform could have shown the ad, the share it did not, because the daily budget was used up (reported by the platform). A high figure means the campaign could sell more with more budget.</li>
+        <li><b>Action:</b> <i>Fix or cut</i> when ROAS is below target. <i>Add budget</i> when ROAS meets the target and 15% or more of ad views were missed. <i>Keep</i> when ROAS meets the target and the budget is not holding it back.</li>
+      </ul>
+    </>
   );
 }

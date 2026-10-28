@@ -4,7 +4,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { dateLabel, egp, funding, int, pct, promoType } from "@/lib/format";
-import { Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
+import { CampaignTable, Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
 import PlatformPicker from "@/components/PlatformPicker";
@@ -100,15 +100,8 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
         <Kpi info="Money spent on ads on days the product's listing was hidden on this platform, so shoppers could not buy it." label="Spent on suppressed listings" value={egp(supp?.spend ?? 0)} tone={supp?.spend ? "bad" : "good"} />
       </section>
       <section className="card">
-        <Title info="Every campaign on this platform. Share of platform: the campaign's part of the platform's ad spend. Lost to budget: the share of ad views missed because the budget ran out.">Campaigns</Title>
-        <div className="tablewrap"><table>
-          <thead><tr><th>Campaign</th><th>Type</th><th className="r">Spend</th><th className="r">Share of platform</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Lost to budget</th><th>Signal</th></tr></thead>
-          <tbody>{camps.length === 0 ? <tr><td colSpan={8} className="muted">No ad spend on this platform in this period.</td></tr> : camps.map((r) => (
-            <tr key={r.id}><td><b>{r.campaign}</b></td><td>{r.type}<div className="muted">{r.objective}</div></td><td className="r">{egp(r.spend)}</td><td className="r">{pct(r.spendShare, 0)}</td>
-              <td className="r"><b>{r.roas.toFixed(1)}</b></td><td className="r">{r.target.toFixed(1)}</td><td className="r">{pct(r.lostShare, 0)}</td>
-              <td><Pill tone={r.flag.startsWith("Scale") ? "info" : statusTone(r.flag)}>{r.flag}</Pill></td></tr>
-          ))}</tbody>
-        </table></div>
+        <Title info="Every campaign on this platform in this period. The key under the table explains each column and the action.">Campaigns</Title>
+        <CampaignTable rows={camps} />
       </section>
 
       <div className="pillar"><span className="pillar-n">3</span><h2>Deals and Promotions</h2><Link href={full("/promotions")} className="info">All platforms</Link></div>

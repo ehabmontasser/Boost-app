@@ -3,7 +3,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
-import { Empty, Header, Kpi, Pill, statusTone, Title } from "@/components/ui";
+import { CampaignTable, Empty, Header, Kpi, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
 
@@ -28,26 +28,8 @@ export default async function Ads({ searchParams }: { searchParams: SearchParams
         <Kpi info="Money spent on ads on days the product's listing was hidden on the platform, so shoppers could not buy it." label="Spent on suppressed listings" value={egp(suppressed)} tone={suppressed ? "bad" : "good"} note={m.suppressed.length ? m.suppressed.map((x) => x.name).join(", ") : "None"} />
       </section>
       <section className="card">
-        <Title info="One row per campaign. Share of platform: the campaign's part of that platform's ad spend. Lost to budget: the share of ad views missed because the budget ran out. Signal: Below target if ROAS misses the target; Scale if it hits the target and missed 15% or more of views for lack of budget; otherwise On target.">Campaigns</Title>
-        <div className="tablewrap">
-          <table>
-            <thead><tr><th>Platform · campaign</th><th>Type</th><th className="r">Spend</th><th className="r">Share of platform</th><th className="r">ROAS</th><th className="r">Target</th><th className="r">Lost to budget</th><th>Signal</th></tr></thead>
-            <tbody>
-              {m.rows.map((r) => (
-                <tr key={r.platform + r.id}>
-                  <td><b>{r.name}</b><div className="muted">{r.campaign}</div></td>
-                  <td>{r.type}<div className="muted">{r.objective}</div></td>
-                  <td className="r">{egp(r.spend)}</td>
-                  <td className="r">{pct(r.spendShare, 0)}</td>
-                  <td className="r"><b>{r.roas.toFixed(1)}</b></td>
-                  <td className="r">{r.target.toFixed(1)}</td>
-                  <td className="r">{pct(r.lostShare, 0)}</td>
-                  <td><Pill tone={r.flag.startsWith("Scale") ? "info" : statusTone(r.flag)}>{r.flag}</Pill></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Title info="One row per campaign in this period. The key under the table explains each column and the action.">Campaigns</Title>
+        <CampaignTable rows={m.rows} withPlatform />
         <div className="muted">{scale.length} campaign{scale.length === 1 ? "" : "s"} beat the target but run out of budget. Money in campaigns below target is the first source of budget to move.</div>
       </section>
       {m.suppressed.length ? (
