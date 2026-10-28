@@ -29,25 +29,25 @@ export default async function Overview({ searchParams }: { searchParams: SearchP
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
-        <Kpi info="What customers paid after all discounts, excluding VAT, summed across all platforms over the selected period. Net sales = gross sales minus discounts (Sales files). The change compares with the chosen comparison: the previous period or the same period last year." label="Net sales ex VAT" value={egp(m.totalNet)} note={change(m.totalNet, m.prevTotals?.net) || `${m.rows.length} platforms, ${p.short}`} />
-        <Kpi info="Total media cost on all platforms over the selected period, excluding VAT (Ads files). The % below is ad spend divided by net sales." label="Ad spend" value={egp(m.totalSpend)} note={`${pct(m.spendPct)} of sales${m.prevTotals ? ` · ${change(m.totalSpend, m.prevTotals.spend)}` : ""}`} />
-        <Kpi info="Sales missed because products were out of stock: demand units the platform could not fill (Inventory files) x that day's selling price (Price and Promo files), over the selected period. The % is lost demand divided by net sales. 'Worst' is the platform with the highest %." label="Demand lost to stockouts" value={egp(m.totalLost)} tone="bad" note={`${pct(m.lostPct)} of sales${worst ? ` · worst: ${worst.name} ${pct(worst.lostPct)}` : ""}`} />
-        {wb.now !== null ? <Kpi info="Sprout's blended share of wipes across all 5 platforms: Sprout wipes sales on all platforms / wipes sales of all brands on all platforms (Market files), for the weeks in the selected period. Bigger platforms weigh more, so it is not an average of the platform shares. The line below compares it with the chosen comparison period (or the first week, for the full period)." label="Wipes share, all platforms" value={pct(wb.now)} tone={movePts === null ? undefined : movePts < 0 ? "bad" : "good"} note={movePts === null ? "Blended across 5 platforms" : Math.abs(movePts) < 0.05 ? `Flat ${base}` : `${movePts < 0 ? "Down" : "Up"} ${Math.abs(movePts).toFixed(1)} pts ${base}`} /> : null}
+        <Kpi info="What shoppers paid after discounts, excluding VAT, on all platforms in this period. The change is against the comparison you picked: the previous period or the same period last year." label="Net sales ex VAT" value={egp(m.totalNet)} note={change(m.totalNet, m.prevTotals?.net) || `${m.rows.length} platforms, ${p.short}`} />
+        <Kpi info="Total spent on ads on all platforms in this period, excluding VAT. The % is ad spend as a share of net sales." label="Ad spend" value={egp(m.totalSpend)} note={`${pct(m.spendPct)} of sales${m.prevTotals ? ` · ${change(m.totalSpend, m.prevTotals.spend)}` : ""}`} />
+        <Kpi info="Sales missed because products were out of stock: the units shoppers wanted but could not buy, valued at that day's price. The % is compared with net sales. Worst = the platform losing the biggest share of its sales." label="Demand lost to stockouts" value={egp(m.totalLost)} tone="bad" note={`${pct(m.lostPct)} of sales${worst ? ` · worst: ${worst.name} ${pct(worst.lostPct)}` : ""}`} />
+        {wb.now !== null ? <Kpi info="Sprout's share of all wipes sold on the 5 platforms together (all brands). Bigger platforms count more, so it is not a simple average of the platform shares. The line below shows the change against the comparison period." label="Wipes share, all platforms" value={pct(wb.now)} tone={movePts === null ? undefined : movePts < 0 ? "bad" : "good"} note={movePts === null ? "Blended across 5 platforms" : Math.abs(movePts) < 0.05 ? `Flat ${base}` : `${movePts < 0 ? "Down" : "Up"} ${Math.abs(movePts).toFixed(1)} pts ${base}`} /> : null}
       </section>
       <div className="row">
         <section className="card wide">
-          <Title info="Net sales excluding VAT for each platform over the selected period. Bar length is relative to the largest platform.">Net sales by platform</Title>
+          <Title info="Net sales of each platform in this period, excluding VAT. The longest bar is the biggest platform.">Net sales by platform</Title>
           <Bars rows={[...m.rows].sort((a, b) => b.net - a.net).map((r) => ({ code: r.code, label: r.name, value: r.net }))} format={(n) => egp(n)} />
           <div className="muted">All values ex VAT, EGP. Bar length is relative to the largest platform.</div>
         </section>
         <section className="card">
-          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly: the 13 weeks up to the selected week. Monthly: the 12 months up to it. Quarterly: the 8 quarters up to it. YTD and custom: each week in the range (by month for long ranges). Full period: by month.">Wipes share of the platform segment</Title>
+          <Title info="Sprout's share of all wipes sold on each platform (all brands). Weekly view: the last 13 weeks. Monthly: the last 12 months. Quarterly: the last 8 quarters. YTD, custom and full period: each week or month in the range.">Wipes share of the platform segment</Title>
           <ShareLines series={m.market.wipes} label={`Wipes share by platform, ${trendNote}`} start={trendLabel(m.market.trendStart)} end={trendLabel(m.market.trendEnd)} />
           <div className="muted">Sprout's share of wipes sales on each platform, {trendNote}.</div>
         </section>
       </div>
       <section className="card">
-        <Title info="One row per platform over the selected period. Ad spend % = spend / net sales. ROAS = 7-day attributed sales / ad spend. Lost to stockouts = unfilled demand x selling price, red above 3% of net sales. Wipes share = the selected period.">Platform scorecard</Title>
+        <Title info="One row per platform for this period. Ad spend %: ad spend as a share of net sales. ROAS = sales from ads (within 7 days of a click) divided by ad spend. A ROAS of 4 means EGP 4 of sales for every EGP 1 spent. Lost to stockouts turns red above 3% of sales.">Platform scorecard</Title>
         <div className="tablewrap">
           <table>
             <thead><tr><th>Platform</th><th className="r">Net sales</th>{p.prev ? <th className="r">Change</th> : null}<th className="r">Ad spend</th><th className="r">ROAS</th><th className="r">Lost to stockouts</th><th className="r">Wipes share</th></tr></thead>

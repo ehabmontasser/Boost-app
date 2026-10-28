@@ -29,22 +29,22 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
         <PeriodPicker view={p.view} periodKey={p.key} from={p.from} to={p.to} cmp={p.cmp} options={options!} />
       </Header>
       <section className="kpis" aria-label="Key figures">
-        <Kpi info="Platforms where Sprout's wipes share in the selected period is below the comparison period (previous period or same period last year), or below the first week for the full period. Share = Sprout wipes sales / wipes sales of all brands on the platform (Market files)." label="Platforms losing wipes share" value={`${falling.length} of ${comparable.length}`} tone={falling.length ? "bad" : "good"} note={falling.length ? `${falling.map((x) => x.name).join(", ")} · ${since}` : since} />
-        {worst ? <Kpi info="The platform whose wipes share moved down the most against the comparison period, in percentage points." label={`Biggest ${move(worst) < 0 ? "drop" : "change"}: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone={move(worst) < 0 ? "bad" : "good"} note={`${pct(worst.base ?? 0)} to ${pct(worst.now ?? 0)}`} /> : null}
-        <Kpi info="Platforms where at least one Sprout product in the SKU master has no listing (Brand Master, Platform_Listings)." label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
+        <Kpi info="Platforms where Sprout's share of all wipes sold went down against the comparison period (previous period or same period last year). Full period: the last week against the first." label="Platforms losing wipes share" value={`${falling.length} of ${comparable.length}`} tone={falling.length ? "bad" : "good"} note={falling.length ? `${falling.map((x) => x.name).join(", ")} · ${since}` : since} />
+        {worst ? <Kpi info="The platform where Sprout's wipes share fell the most, in percentage points (pts): 12.4% to 11.8% is -0.6 pts." label={`Biggest ${move(worst) < 0 ? "drop" : "change"}: ${worst.name}`} value={`${(move(worst) * 100).toFixed(1)} pts`} tone={move(worst) < 0 ? "bad" : "good"} note={`${pct(worst.base ?? 0)} to ${pct(worst.now ?? 0)}`} /> : null}
+        <Kpi info="Platforms where at least one Sprout product is not listed (from the Brand Master)." label="Platforms with listing gaps" value={String(m.gaps.filter((g) => g.missing.length).length)} tone="warn" note="Sprout SKUs not listed" />
       </section>
       <div className="row">
         <section className="card">
-          <Title info="Sprout wipes sales / wipes sales of all brands on each platform (Market files). Weekly: the 13 weeks up to the selected week. Monthly: the 12 months up to it. Quarterly: the 8 quarters up to it. YTD and custom: each week in the range (by month for long ranges). Full period: by month.">Wipes share by platform</Title>
+          <Title info="Sprout's share of all wipes sold on each platform (all brands). Weekly view: the last 13 weeks. Monthly: the last 12 months. Quarterly: the last 8 quarters. YTD, custom and full period: each week or month in the range.">Wipes share by platform</Title>
           <ShareLines series={m.wipes} label={`Wipes share by platform, ${trendNote}`} start={trendLabel(m.trendStart)} end={trendLabel(m.trendEnd)} />
         </section>
         <section className="card">
-          <Title info="Sprout skin care sales / skin care sales of all brands on each platform (Market files), over the same weeks or months as the wipes chart.">Skin care share by platform</Title>
+          <Title info="Sprout's share of all skin care sold on each platform (all brands), over the same weeks or months as the wipes chart.">Skin care share by platform</Title>
           <ShareLines series={m.skin} label={`Skin care share by platform, ${trendNote}`} start={trendLabel(m.trendStart)} end={trendLabel(m.trendEnd)} />
         </section>
       </div>
       <section className="card">
-        <Title info="The top wipes products by sales value on each platform in the last week of the selected period (Market files). Sprout's best rank is its highest product within the top 8.">{`Who leads each platform (wipes, ${latest})`}</Title>
+        <Title info="The best-selling wipes products on each platform in the last week of the period. Sprout's best rank is its highest product in the top 8.">{`Who leads each platform (wipes, ${latest})`}</Title>
         <div className="tablewrap">
           <table>
             <thead><tr><th>Platform</th><th>#1</th><th>#2</th><th>#3</th><th>Sprout's best rank</th></tr></thead>
@@ -66,12 +66,12 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
       </section>
       <div className="row">
         <section className="card">
-          <Title info="Sprout sales / sales of all brands in each sub-segment where Sprout sells, over the weeks in the selected period (full period: the last week). Change = the share now minus the share in the comparison period (previous period or same period last year; full period: the first week), in percentage points. Biggest drop first.">Share by sub-segment</Title>
+          <Title info="Sprout's share of each sub-segment where it sells, in this period, and the change in percentage points against the comparison period. Full period: the last week against the first. Biggest drop first.">Share by sub-segment</Title>
           <SubSegmentTable rows={m.subRows} withPlatform />
           <div className="muted">Sub-segments where Sprout sells, {p.label}{since ? `, change ${since}` : ""}. Biggest drop first.</div>
         </section>
         <section className="card">
-          <Title info="Sprout products in the SKU master that have no listing on the platform (Brand Master, Platform_Listings).">Assortment gaps</Title>
+          <Title info="Sprout products that are not listed on the platform (from the Brand Master).">Assortment gaps</Title>
           <div className="tablewrap"><table>
             <thead><tr><th>Platform</th><th>Sprout SKUs not listed</th></tr></thead>
             <tbody>{m.gaps.map((g) => (
