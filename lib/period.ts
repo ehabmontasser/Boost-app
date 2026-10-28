@@ -124,8 +124,11 @@ export function resolvePeriod(q: PeriodQuery, minDate: string, maxDate: string):
   // the comparison covers the same span: for a partial period, the matching part of the comparison period
   const base = cmp === "yoy" ? yoy : pp;
   const shift = daysBetween(start, base.from);
-  const cmpFrom = view === "month" || view === "quarter" ? addDays(base.from, daysBetween(start, from)) : addDays(from, shift);
-  const cmpTo = view === "month" || view === "quarter" ? min(addDays(base.from, daysBetween(start, to)), base.to) : addDays(to, shift);
+  // a complete month or quarter compares with the whole comparison month or quarter, even when the lengths differ
+  // (September with all of August); only a period still in progress is cut to the matching days
+  const calendar = view === "month" || view === "quarter";
+  const cmpFrom = calendar ? (partial ? addDays(base.from, daysBetween(start, from)) : base.from) : addDays(from, shift);
+  const cmpTo = calendar ? (partial ? min(addDays(base.from, daysBetween(start, to)), base.to) : base.to) : addDays(to, shift);
   const covered = cmpFrom >= minDate && cmpTo <= maxDate;
   const prev = covered ? { from: cmpFrom, to: cmpTo, label: base.label } : null;
   const noPrev = covered || view === "year" ? null : cmp === "yoy" ? "No data for the same period last year" : "No data for the previous period";
