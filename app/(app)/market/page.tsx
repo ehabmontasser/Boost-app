@@ -3,7 +3,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { periodQuery, trendLabel, vsShort } from "@/lib/period";
 import { dateLabel, egp, pct } from "@/lib/format";
-import { Empty, Header, Kpi, Pill, Title } from "@/components/ui";
+import { Empty, Header, Kpi, Pill, SubSegmentTable, Title } from "@/components/ui";
 import { ShareLines } from "@/components/charts";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
@@ -66,14 +66,9 @@ export default async function Market({ searchParams }: { searchParams: SearchPar
       </section>
       <div className="row">
         <section className="card">
-          <Title info="Sprout sales / sales of all brands in each sub-segment over the weeks in the selected period, lowest first. 0% means Sprout has no listing or no sales there.">Share by sub-segment</Title>
-          <div className="tablewrap"><table>
-            <thead><tr><th>Platform</th><th>Sub-segment</th><th className="r">Sprout share</th></tr></thead>
-            <tbody>{[...m.subRows].sort((a, b) => a.share - b.share).slice(0, 12).map((r, i) => (
-              <tr key={i}><td>{r.name}</td><td>{r.sub}</td><td className="r">{pct(r.share)}</td></tr>
-            ))}</tbody>
-          </table></div>
-          <div className="muted">Lowest shares first, {p.label}. A sub-segment with zero share is one where Sprout has no listing or no sales.</div>
+          <Title info="Sprout sales / sales of all brands in each sub-segment where Sprout sells, over the weeks in the selected period (full period: the last week). Change = the share now minus the share in the comparison period (previous period or same period last year; full period: the first week), in percentage points. Biggest drop first.">Share by sub-segment</Title>
+          <SubSegmentTable rows={m.subRows} withPlatform />
+          <div className="muted">Sub-segments where Sprout sells, {p.label}{since ? `, change ${since}` : ""}. Biggest drop first.</div>
         </section>
         <section className="card">
           <Title info="Sprout products in the SKU master that have no listing on the platform (Brand Master, Platform_Listings).">Assortment gaps</Title>

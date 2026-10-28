@@ -97,7 +97,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
         marketShare: {
           wipesSegmentShare: share(mk.wipesNow), skinCareSegmentShare: share(mk.skinNow),
           topWipesSkusLatestWeek: (mk.top[pl.code] ?? []).slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, own: x.own })),
-          lowestSubSegments: mine(mk.subRows).sort((a, b) => a.share - b.share).slice(0, 5).map((x) => ({ subSegment: x.sub, share: r(x.share, 3) })),
+          subSegmentsWhereBrandSells: mine(mk.subRows).map((x) => ({ subSegment: x.sub, before: x.base === null ? null : r(x.base, 3), now: r(x.share, 3) })),
           brandSkusNotListed: mk.gaps.find((g) => g.code === pl.code)?.missing ?? [],
         },
       } };
@@ -110,6 +110,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
         wipesSegmentShare: m.wipesNow.map((x) => ({ platform: x.name, before: x.base === null ? null : r(x.base, 3), now: x.now === null ? null : r(x.now, 3) })),
         skinCareSegmentShare: m.skinNow.map((x) => ({ platform: x.name, before: x.base === null ? null : r(x.base, 3), now: x.now === null ? null : r(x.now, 3) })),
         topWipesSkusLatestWeek: Object.fromEntries(Object.entries(m.top).map(([k, v]) => [c.nameOf(k), v.slice(0, 5).map((x) => ({ rank: x.rank, brand: x.brand, product: x.product, subCategory: x.sub, own: x.own }))])),
+        subSegmentShareWhereBrandSells: m.subRows.map((x) => ({ platform: x.name, subSegment: x.sub, before: x.base === null ? null : r(x.base, 3), now: r(x.share, 3) })),
         brandSkusNotListed: m.gaps.map((g) => ({ platform: g.name, missing: g.missing })),
       } };
     }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import InfoTip from "./InfoTip";
+import { pct } from "@/lib/format";
 
 export function Kpi({ label, value, note, tone, info }: { label: string; value: string; note?: ReactNode; tone?: "bad" | "good" | "warn" | "info"; info?: string }) {
   return (
@@ -53,4 +54,23 @@ export function statusTone(s: string): "good" | "warn" | "bad" | "info" | "mute"
   if (s === "Overstock") return "info";
   if (s === "Healthy" || s === "On target") return "good";
   return "mute";
+}
+
+/** Brand share per sub-segment with the change against the comparison, biggest drop first. */
+export function SubSegmentTable({ rows, withPlatform }: { rows: { name: string; sub: string; share: number; base: number | null }[]; withPlatform?: boolean }) {
+  const pts = (r: { share: number; base: number | null }) => (r.base === null ? null : (r.share - r.base) * 100);
+  const sorted = [...rows].sort((a, b) => (pts(a) ?? 0) - (pts(b) ?? 0) || a.share - b.share);
+  const cols = withPlatform ? 4 : 3;
+  return (
+    <div className="tablewrap"><table className="fit">
+      <thead><tr>{withPlatform ? <th>Platform</th> : null}<th>Sub-segment</th><th className="r">Share</th><th className="r">Change</th></tr></thead>
+      <tbody>{sorted.length === 0 ? <tr><td colSpan={cols} className="muted">No sales in any sub-segment in this period.</td></tr> : sorted.map((r, i) => {
+        const d = pts(r);
+        return (
+          <tr key={i}>{withPlatform ? <td>{r.name}</td> : null}<td>{r.sub}</td><td className="r">{pct(r.share)}</td>
+            <td className={"r " + (d === null ? "muted" : d <= -0.05 ? "bad" : d >= 0.05 ? "good" : "")}>{d === null ? "-" : `${d > 0 ? "+" : ""}${d.toFixed(1)} pts`}</td></tr>
+        );
+      })}</tbody>
+    </table></div>
+  );
 }

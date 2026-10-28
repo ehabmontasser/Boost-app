@@ -4,7 +4,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { dateLabel, egp, int, pct } from "@/lib/format";
-import { Empty, Header, Kpi, Pill, statusTone, Title } from "@/components/ui";
+import { Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
 import PlatformPicker from "@/components/PlatformPicker";
@@ -142,13 +142,8 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
           </table></div>
         </section>
         <section className="card">
-          <Title info="The brand's sales / sales of all brands in each sub-segment on this platform over the weeks in the selected period, lowest first. 0% means no listing or no sales there.">Share by sub-segment</Title>
-          <div className="tablewrap"><table className="fit">
-            <thead><tr><th>Sub-segment</th><th className="r">Share</th></tr></thead>
-            <tbody>{subs.length === 0 ? <tr><td colSpan={2} className="muted">No market data in this period.</td></tr> : subs.slice(0, 8).map((x, i) => (
-              <tr key={i}><td>{x.sub}</td><td className="r">{pct(x.share)}</td></tr>
-            ))}</tbody>
-          </table></div>
+          <Title info="The brand's sales / sales of all brands in each sub-segment on this platform where the brand sells, over the weeks in the selected period (full period: the last week). Change = share now minus the share in the comparison period, in percentage points. Biggest drop first.">Share by sub-segment</Title>
+          <SubSegmentTable rows={subs} />
         </section>
       </div>
 

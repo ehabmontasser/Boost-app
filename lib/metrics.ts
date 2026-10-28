@@ -110,14 +110,18 @@ export async function marketModel(c: Ctx, p: Period) {
     code: pl.code, name: pl.name, share: buckets.map((b) => shareOf(pl.code, category, b.weeks) ?? 0),
   })).filter((s) => s.share.some((v) => v > 0));
 
-  // sub-segment share over the period
-  const subRows: { platform: string; name: string; sub: string; share: number }[] = [];
+  // sub-segment share over the period, with the comparison (same rule as the platform shares above);
+  // only sub-segments where the brand sells, now or in the comparison
+  const baseWeeks = p.prev ? prevWeeks : p.view === "year" && periodWeeks.length > 1 ? periodWeeks.slice(0, 1) : null;
+  const nowWeeks = p.view === "year" ? periodWeeks.slice(-1) : periodWeeks;
+  const subRows: { platform: string; name: string; sub: string; share: number; base: number | null }[] = [];
   for (const pl of c.platforms) {
     const subs = [...new Set(cat.filter((r) => r.platform === pl.code && periodWeeks.includes(r.week_start)).map((r) => r.category + "|" + r.sub_category))];
     for (const key of subs) {
       const [category, sub] = key.split("|");
-      const s = shareOf(pl.code, category, periodWeeks, sub);
-      if (s !== null) subRows.push({ platform: pl.code, name: pl.name, sub: `${category}: ${sub}`, share: s });
+      const s = shareOf(pl.code, category, nowWeeks, sub);
+      const b = baseWeeks ? shareOf(pl.code, category, baseWeeks, sub) : null;
+      if (s !== null && (s > 0 || (b ?? 0) > 0)) subRows.push({ platform: pl.code, name: pl.name, sub: `${category}: ${sub}`, share: s, base: b });
     }
   }
 
