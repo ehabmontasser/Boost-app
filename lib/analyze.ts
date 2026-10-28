@@ -59,7 +59,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
       return { brandId: c.brandId, data: {
         brand: c.brandName, period, currency: "EGP ex VAT", method: "Each run of a promotion is compared with the SKU's non-promo days in the 14 days before it. Estimated profit effect = (promo daily units x promo margin - baseline daily units x normal margin) x promo days, after platform margin, COGS and the vendor-funded discount. Runs that overlap the period are counted in full.",
         totals: { dilutive: r(m.dilutive), accretive: r(m.accretive) },
-        promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, skuDays: x.days })),
+        promotions: m.rows.map((x) => ({ platform: x.name, promo: x.promo, type: x.type, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), vendorFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), skus: x.skus, products: x.skuNames, skuDays: x.days })),
       } };
     }
     case "platform": {
@@ -92,7 +92,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
         dealsAndPromotions: {
           method: "Each run is compared with the SKU's non-promo days in the 14 days before it, after platform margin, COGS and the brand-funded discount.",
           netProfitEffect: r(promos.reduce((a, x) => a + x.effect, 0)),
-          promotions: promos.map((x) => ({ promo: x.promo, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), brandFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect) })),
+          promotions: promos.map((x) => ({ promo: x.promo, funding: x.funding, runs: x.runs, depth: r(x.depth, 3), brandFundedShare: r(x.vendorShare, 2), volumeUplift: r(x.uplift, 2), estimatedProfitEffect: r(x.effect), products: x.skuNames })),
         },
         marketShare: {
           wipesSegmentShare: share(mk.wipesNow), skinCareSegmentShare: share(mk.skinNow),

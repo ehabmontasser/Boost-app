@@ -13,3 +13,9 @@ export function dateLabel(iso: string | null): string {
   const d = new Date(iso + "T00:00:00Z");
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 }
+
+/** Promotion mechanic and funding in plain words (codes from the Price and Promo files). */
+export const PROMO_TYPE: Record<string, string> = { BUNDLE: "Bundle", COUPON: "Coupon", DEAL_EVENT: "Sale event", LIGHTNING_DEAL: "Lightning deal", PRICE_OFF: "Price cut" };
+export const FUNDING: Record<string, string> = { VENDOR: "Brand", PLATFORM: "Platform", SHARED: "Shared" };
+export const promoType = (t: string) => PROMO_TYPE[t] ?? t;
+export const funding = (f: string) => FUNDING[f] ?? f;

@@ -3,7 +3,7 @@ import { adsModel, marketModel, overviewModel, promoModel, replenishmentModel } 
 import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
-import { dateLabel, egp, int, pct } from "@/lib/format";
+import { dateLabel, egp, funding, int, pct, promoType } from "@/lib/format";
 import { Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
@@ -115,9 +115,11 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
       <section className="card">
         <Title info="Promotions on this platform in this period, each compared with the normal days just before it. Volume lift: sales during the promotion compared with normal days (1.5x = 50% more). Profit effect: money made or lost compared with normal days, after the platform's cut, product cost and the discount the brand pays.">{`Every promotion, worst first · net effect ${egp(promoNet, false)}`}</Title>
         <div className="tablewrap"><table>
-          <thead><tr><th>Promotion</th><th>Funding</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
+          <thead><tr><th>Promotion · mechanic · products</th><th>Funded by</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
           <tbody>{promos.length === 0 ? <tr><td colSpan={7} className="muted">No promotion ran on this platform in this period.</td></tr> : promos.map((r) => (
-            <tr key={r.promo}><td><b>{r.promo}</b><div className="muted">{r.skus} SKU{r.skus === 1 ? "" : "s"}{r.runs > 1 ? ` · ${r.runs} runs` : ""}</div></td><td>{r.funding}</td>
+            <tr key={r.promo}><td><b>{r.promo}</b>
+              <div className="muted">{promoType(r.type)}, {pct(r.depth, 0)} off · ran {r.runs === 1 ? "once" : `${r.runs} times`}</div>
+              <div className="promo-skus">{r.skuNames.join(", ")}</div></td><td>{funding(r.funding)}</td>
               <td className="r">{pct(r.depth, 0)}</td><td className="r">{pct(r.vendorShare, 0)}</td><td className="r">{r.uplift.toFixed(2)}x</td>
               <td className={"r " + (r.effect < 0 ? "bad" : "good")}><b>{egp(r.effect, false)}</b></td>
               <td><Pill tone={r.effect < 0 ? "bad" : "good"}>{r.effect < 0 ? "Lost money" : "Earned its cost"}</Pill></td></tr>

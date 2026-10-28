@@ -2,7 +2,7 @@ import { promoModel } from "@/lib/metrics";
 import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { periodQuery } from "@/lib/period";
-import { egp, pct } from "@/lib/format";
+import { egp, funding, pct, promoType } from "@/lib/format";
 import { Empty, Header, Kpi, Pill, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
@@ -26,15 +26,17 @@ export default async function Promotions({ searchParams }: { searchParams: Searc
         <Kpi info="Profit added minus profit given away: whether promotions made or lost money overall in this period. Worst = the promotion that lost the most." label="Net effect" value={egp(m.dilutive + m.accretive)} tone={m.dilutive + m.accretive < 0 ? "bad" : "good"} note={worst ? `Worst: ${worst.name}, ${worst.promo}` : undefined} />
       </section>
       <section className="card">
-        <Title info="Depth: average discount off the list price. Brand pays: the part of the discount the brand funds. Volume lift: sales during the promotion compared with normal days (1.5x = 50% more). Profit effect: money made or lost compared with normal days, after the platform's cut, product cost and the discount the brand pays.">Every promotion, worst first</Title>
+        <Title info="First column: the promotion and platform, its mechanic (bundle, coupon, price cut, sale event or lightning deal), the average discount, how many times it ran, and the products in it. Depth: average discount off the list price. Brand pays: the part of the discount the brand funds. Volume lift: sales during the promotion compared with normal days (1.5x = 50% more). Profit effect: money made or lost compared with normal days, after the platform's cut, product cost and the discount the brand pays.">Every promotion, worst first</Title>
         <div className="tablewrap">
           <table>
-            <thead><tr><th>Platform · promotion</th><th>Funding</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
+            <thead><tr><th>Promotion · mechanic · products</th><th>Funded by</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
             <tbody>
               {m.rows.length === 0 ? <tr><td colSpan={7} className="muted">No promotion ran in this period.</td></tr> : m.rows.map((r) => (
                 <tr key={r.platform + r.promo}>
-                  <td><b>{r.name}</b><div className="muted">{r.promo} · {r.skus} SKU{r.skus === 1 ? "" : "s"}{r.runs > 1 ? ` · ${r.runs} runs` : ""}</div></td>
-                  <td>{r.funding}</td>
+                  <td><b>{r.promo}</b> <span className="muted">· {r.name}</span>
+                    <div className="muted">{promoType(r.type)}, {pct(r.depth, 0)} off · ran {r.runs === 1 ? "once" : `${r.runs} times`}</div>
+                    <div className="promo-skus">{r.skuNames.join(", ")}</div></td>
+                  <td>{funding(r.funding)}</td>
                   <td className="r">{pct(r.depth, 0)}</td>
                   <td className="r">{pct(r.vendorShare, 0)}</td>
                   <td className="r">{r.uplift.toFixed(2)}x</td>
