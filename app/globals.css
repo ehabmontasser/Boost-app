@@ -15,7 +15,8 @@ h2 { font-size: 20px; font-weight: 600; }
 
 .shell { display: flex; flex-wrap: wrap; min-height: 100vh; }
 .side { flex: 0 0 240px; width: 240px; background: var(--side); color: #fff; padding: 24px 16px; display: flex; flex-direction: column; gap: 28px; }
-.brandmark { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+.brandmark { display: flex; align-items: center; gap: 10px; padding: 0 8px; color: inherit; text-decoration: none; border-radius: 8px; }
+a.brandmark:focus-visible { outline: 2px solid var(--boost); outline-offset: 3px; }
 .brandmark .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--boost); display: flex; align-items: center; justify-content: center; }
 .brandmark span { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .04em; }
 .nav { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 500; }
