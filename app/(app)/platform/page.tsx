@@ -113,7 +113,7 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
 
       <div className="pillar"><span className="pillar-n">3</span><h2>Deals and Promotions</h2><Link href={full("/promotions")} className="info">All platforms</Link></div>
       <section className="card">
-        <Title info="Promotions on this platform running in the selected period. Each run is compared with the product's non-promotion days in the 14 days before it, after platform margin, cost of goods and the brand-funded discount. Volume lift = daily units during / normal daily units.">{`Every promotion, worst first · net effect ${egp(promoNet, false)}`}</Title>
+        <Title info="Promotions on this platform in this period, each compared with the normal days just before it. Volume lift: sales during the promotion compared with normal days (1.5x = 50% more). Profit effect: money made or lost compared with normal days, after the platform's cut, product cost and the discount the brand pays.">{`Every promotion, worst first · net effect ${egp(promoNet, false)}`}</Title>
         <div className="tablewrap"><table>
           <thead><tr><th>Promotion</th><th>Funding</th><th className="r">Depth</th><th className="r">Brand pays</th><th className="r">Volume lift</th><th className="r">Profit effect</th><th>Verdict</th></tr></thead>
           <tbody>{promos.length === 0 ? <tr><td colSpan={7} className="muted">No promotion ran on this platform in this period.</td></tr> : promos.map((r) => (
