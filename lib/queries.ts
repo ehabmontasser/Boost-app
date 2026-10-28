@@ -48,8 +48,9 @@ export async function salesDaily(b: string) {
 }
 
 export async function adsByPlatform(b: string, r: Range) {
-  return q<{ platform: string; spend: number; att: number }>(
-    `SELECT platform, SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att
+  return q<{ platform: string; spend: number; att: number; impressions: number; clicks: number; orders: number }>(
+    `SELECT platform, SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att, SUM(impressions) AS impressions, SUM(clicks) AS clicks,
+            SUM(attributed_orders_7d) AS orders
      FROM ads_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform`, [b, r.from, r.to]);
 }
 
@@ -131,9 +132,9 @@ export async function poPerformance(b: string, r: Range) {
 
 // ---------- ads ----------
 export async function adsByCampaign(b: string, r: Range) {
-  return q<{ platform: string; campaign_id: string; campaign_name: string; ad_type: string; objective: string; spend: number; att: number; clicks: number; impressions: number; lost_w: number; budget_days: number }>(
+  return q<{ platform: string; campaign_id: string; campaign_name: string; ad_type: string; objective: string; spend: number; att: number; clicks: number; impressions: number; orders: number; lost_w: number; budget_days: number }>(
     `SELECT platform, campaign_id, MAX(campaign_name) AS campaign_name, MAX(ad_type) AS ad_type, MAX(objective) AS objective,
-            SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att, SUM(clicks) AS clicks, SUM(impressions) AS impressions,
+            SUM(ad_spend) AS spend, SUM(attributed_sales_7d) AS att, SUM(clicks) AS clicks, SUM(impressions) AS impressions, SUM(attributed_orders_7d) AS orders,
             SUM(impression_share_lost_budget * ad_spend) AS lost_w, COUNT(*) AS budget_days
      FROM ads_daily WHERE brand_id = $1 AND date >= $2 AND date <= $3 GROUP BY platform, campaign_id`, [b, r.from, r.to]);
 }

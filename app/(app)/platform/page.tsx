@@ -4,7 +4,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { dateLabel, egp, funding, int, pct, promoType } from "@/lib/format";
-import { CampaignTable, Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
+import { AdFunnelKpis, CampaignTable, Empty, Header, Kpi, Pill, statusTone, SubSegmentTable, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
 import PlatformPicker from "@/components/PlatformPicker";
@@ -30,6 +30,7 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
   const lost = rp ? mine(rp.lostAll) : [];
   const po = rp ? mine(rp.poAll) : [];
   const camps = mine(ad.rows);
+  const fun = ad.funnelByPlatform.find((x) => x.code === pl.code);
   const below = camps.filter((x) => x.roas < x.target).reduce((a, x) => a + x.spend, 0);
   const supp = mine(ad.suppressed)[0];
   const promos = mine(pr.rows);
@@ -99,6 +100,7 @@ export default async function PlatformAnalysis({ searchParams }: { searchParams:
         <Kpi info="Campaigns that hit their target but missed 15% or more of ad views because the budget ran out: candidates for more budget." label="Campaigns to scale" value={String(camps.filter((x) => x.flag.startsWith("Scale")).length)} tone="info" note={`of ${camps.length} campaigns`} />
         <Kpi info="Money spent on ads on days the product's listing was hidden on this platform, so shoppers could not buy it." label="Spent on suppressed listings" value={egp(supp?.spend ?? 0)} tone={supp?.spend ? "bad" : "good"} />
       </section>
+      {fun ? <AdFunnelKpis f={fun} prev={ad.prevFunnelByPlatform?.get(pl.code)} vs={vs} /> : null}
       <section className="card">
         <Title info="Every campaign on this platform in this period. The key under the table explains each column and the action.">Campaigns</Title>
         <CampaignTable rows={camps} />

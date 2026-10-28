@@ -19,3 +19,13 @@ export const PROMO_TYPE: Record<string, string> = { BUNDLE: "Bundle", COUPON: "C
 export const FUNDING: Record<string, string> = { VENDOR: "Brand", PLATFORM: "Platform", SHARED: "Shared" };
 export const promoType = (t: string) => PROMO_TYPE[t] ?? t;
 export const funding = (f: string) => FUNDING[f] ?? f;
+
+/** Large counts in short form: 20,240,822 -> 20.2M, 143,500 -> 144k. */
+export function count(n: number): string {
+  const v = Math.abs(n);
+  if (v >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (v >= 10_000) return `${Math.round(n / 1000)}k`;
+  return Math.round(n).toLocaleString("en-US");
+}
+/** Small money amounts with cents: EGP 1.74. */
+export const egp2 = (n: number) => `EGP ${n.toFixed(2)}`;

@@ -86,4 +86,4 @@ Open `docs/design/Main.dc.html` etc. in a browser for the mock screens.
 ## Rules baked into the models
 - Replenishment: at risk if gap days >= 1.5 and gap days x daily rate >= 10, where gap = (days to PO arrival, or lead time + review period if no PO) minus current cover. Overstock judged per platform and SKU against max cover days. Watch if cover is under 50% of target.
 - Promo effect: each run of a promotion (consecutive promo days per SKU) is compared with that SKU's non-promo days in the 14 days before it (at least 5), after platform margin, cost of goods and brand-funded discount. Runs overlapping the period count in full.
-- Ads: ROAS = attributed 7-day sales / ad spend, ex VAT, compared with each campaign's target ROAS.
+- Ads: ROAS = attributed 7-day sales / ad spend, ex VAT, compared with each campaign's target ROAS (Platform_Terms in the Brand Master, one per platform). Ad funnel (Performance Marketing and Platform Analysis): CTR = clicks / impressions, CPC = spend / clicks, conversion = attributed 7-day orders / clicks, cost per order = spend / attributed orders, each against the comparison period.

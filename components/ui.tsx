@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import InfoTip from "./InfoTip";
-import { egp, pct } from "@/lib/format";
+import { count, egp, egp2, pct } from "@/lib/format";
 
 export function Kpi({ label, value, note, tone, info }: { label: string; value: string; note?: ReactNode; tone?: "bad" | "good" | "warn" | "info"; info?: string }) {
   return (
@@ -105,5 +105,43 @@ export function CampaignTable({ rows, withPlatform }: { rows: CampaignRow[]; wit
         <li><b>Action:</b> <i>Fix or cut</i> when ROAS is below target. <i>Add budget</i> when ROAS meets the target and 15% or more of ad views were missed. <i>Keep</i> when ROAS meets the target and the budget is not holding it back.</li>
       </ul>
     </>
+  );
+}
+
+type Funnel = { spend: number; att: number; impressions: number; clicks: number; orders: number; ctr: number | null; cpc: number | null; conversion: number | null; costPerOrder: number | null };
+// a change that rounds to zero reads "unchanged" instead of "-0.00"
+const signed = (v: number, digits: number, unit: string) => { const t = v.toFixed(digits); return Number(t) === 0 ? "unchanged" : `${v > 0 ? "+" : ""}${t}${unit}`; };
+const relChange = (now: number | null, before: number | null | undefined) =>
+  now === null || !before ? "" : signed(((now - before) / before) * 100, 1, "%");
+const ptsChange = (now: number | null, before: number | null | undefined, digits = 1) =>
+  now === null || before === null || before === undefined ? "" : signed((now - before) * 100, digits, " pts");
+const withVs = (change: string, vs: string, fallback: string) => (change && vs ? `${change} ${vs} · ${fallback}` : fallback);
+
+/** The ad funnel (views, clicks, orders) as KPI tiles, each with its change against the comparison period. */
+export function AdFunnelKpis({ f, prev, vs }: { f: Funnel; prev: Funnel | null | undefined; vs: string }) {
+  return (
+    <section className="kpis" aria-label="Ad funnel">
+      <Kpi info="How many times the ads were shown to shoppers (impressions) in this period." label="Ad views" value={count(f.impressions)} note={withVs(relChange(f.impressions, prev?.impressions), vs, `${count(f.clicks)} clicks`)} />
+      <Kpi info="Click-through rate: the share of ad views that got a click. Clicks / ad views." label="CTR" value={f.ctr === null ? "-" : pct(f.ctr, 2)} note={withVs(ptsChange(f.ctr, prev?.ctr, 2), vs, "of views clicked")} />
+      <Kpi info="Cost per click: ad spend / clicks. Lower is cheaper traffic." label="CPC" value={f.cpc === null ? "-" : egp2(f.cpc)} note={withVs(relChange(f.cpc, prev?.cpc), vs, "per click")} />
+      <Kpi info="Conversion rate: the share of clicks that became an order within 7 days. Orders / clicks." label="Conversion rate" value={f.conversion === null ? "-" : pct(f.conversion, 1)} note={withVs(ptsChange(f.conversion, prev?.conversion), vs, `${count(f.orders)} orders`)} />
+      <Kpi info="Cost per purchase: ad spend / orders from the ads (within 7 days of a click). What one order from advertising costs." label="Cost per order" value={f.costPerOrder === null ? "-" : egp2(f.costPerOrder)} note={withVs(relChange(f.costPerOrder, prev?.costPerOrder), vs, "per order from ads")} />
+    </section>
+  );
+}
+
+/** The ad funnel per platform, biggest spend first. */
+export function AdFunnelTable({ rows }: { rows: (Funnel & { code: string; name: string })[] }) {
+  const sorted = [...rows].sort((a, b) => b.spend - a.spend);
+  return (
+    <div className="tablewrap"><table className="camp">
+      <thead><tr><th>Platform</th><th className="r">Spend</th><th className="r">Ad views</th><th className="r">Clicks</th><th className="r">CTR</th><th className="r">CPC</th><th className="r">Orders</th><th className="r">Conversion</th><th className="r">Cost per order</th><th className="r">ROAS</th></tr></thead>
+      <tbody>{sorted.map((r) => (
+        <tr key={r.code}><td><b>{r.name}</b></td><td className="r">{egp(r.spend)}</td><td className="r">{count(r.impressions)}</td><td className="r">{count(r.clicks)}</td>
+          <td className="r">{r.ctr === null ? "-" : pct(r.ctr, 2)}</td><td className="r">{r.cpc === null ? "-" : egp2(r.cpc)}</td><td className="r">{count(r.orders)}</td>
+          <td className="r">{r.conversion === null ? "-" : pct(r.conversion, 1)}</td><td className="r">{r.costPerOrder === null ? "-" : egp2(r.costPerOrder)}</td>
+          <td className="r">{r.spend ? (r.att / r.spend).toFixed(2) : "-"}</td></tr>
+      ))}</tbody>
+    </table></div>
   );
 }

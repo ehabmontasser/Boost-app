@@ -3,7 +3,7 @@ import { canWrite } from "@/lib/auth";
 import { pageCtx, type SearchParams } from "@/lib/page";
 import { pctChange, periodQuery, vsShort } from "@/lib/period";
 import { egp, pct } from "@/lib/format";
-import { CampaignTable, Empty, Header, Kpi, Title } from "@/components/ui";
+import { AdFunnelKpis, AdFunnelTable, CampaignTable, Empty, Header, Kpi, Title } from "@/components/ui";
 import AnalyzeButton from "@/components/AnalyzeButton";
 import PeriodPicker from "@/components/PeriodPicker";
 
@@ -26,6 +26,11 @@ export default async function Ads({ searchParams }: { searchParams: SearchParams
         <Kpi info="ROAS = sales from ads (within 7 days of a click) divided by ad spend. A ROAS of 4 means EGP 4 of sales for every EGP 1 spent. Shown for all campaigns together." label="Blended ROAS" value={m.roas.toFixed(2)} note={`${egp(m.totalAtt)} attributed sales${m.prevRoas ? ` · was ${m.prevRoas.toFixed(2)} ${p.cmp === "yoy" ? "last year" : "in the previous period"}` : ""}`} />
         <Kpi info="Money spent in campaigns that missed their target ROAS (set per platform in the Brand Master). The % is of all ad spend." label="Spend below target ROAS" value={egp(m.belowSpend)} tone="warn" note={`${pct(m.totalSpend ? m.belowSpend / m.totalSpend : 0, 0)} of all spend`} />
         <Kpi info="Money spent on ads on days the product's listing was hidden on the platform, so shoppers could not buy it." label="Spent on suppressed listings" value={egp(suppressed)} tone={suppressed ? "bad" : "good"} note={m.suppressed.length ? m.suppressed.map((x) => x.name).join(", ") : "None"} />
+      </section>
+      <AdFunnelKpis f={m.funnel} prev={m.prevFunnel} vs={vs} />
+      <section className="card">
+        <Title info="The ad funnel for each platform in this period: ad views, clicks, orders from the ads (within 7 days of a click), and what each step costs. Biggest spend first.">Ad funnel by platform</Title>
+        <AdFunnelTable rows={m.funnelByPlatform} />
       </section>
       <section className="card">
         <Title info="One row per campaign in this period. The key under the table explains each column and the action.">Campaigns</Title>

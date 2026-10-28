@@ -284,9 +284,24 @@ export async function adsModel(c: Ctx, p: Period) {
     return {
       platform: r.platform, name: c.nameOf(r.platform), id: r.campaign_id, campaign: r.campaign_name, type: r.ad_type, objective: r.objective,
       spend, att: num(r.att), roas, target: tgt, lostShare, spendShare: totals.get(r.platform) ? spend / totals.get(r.platform)! : 0, flag,
+      impressions: num(r.impressions), clicks: num(r.clicks), orders: num(r.orders),
       ctr: num(r.impressions) ? num(r.clicks) / num(r.impressions) : 0,
     };
   }).filter((r) => r.spend > 0).sort((a, b) => b.spend - a.spend);
+  // ad funnel: views -> clicks -> orders, for all platforms, each platform, and the comparison period
+  const funnelOf = (x: { spend: number; att: number; impressions: number; clicks: number; orders: number }) => ({
+    ...x, ctr: x.impressions ? x.clicks / x.impressions : null, cpc: x.clicks ? x.spend / x.clicks : null,
+    conversion: x.clicks ? x.orders / x.clicks : null, costPerOrder: x.orders ? x.spend / x.orders : null,
+    cpm: x.impressions ? (x.spend / x.impressions) * 1000 : null, acos: x.att ? x.spend / x.att : null,
+  });
+  const addUp = (xs: { spend: number; att: number; impressions: number; clicks: number; orders: number }[]) =>
+    xs.reduce((a, x) => ({ spend: a.spend + x.spend, att: a.att + x.att, impressions: a.impressions + x.impressions, clicks: a.clicks + x.clicks, orders: a.orders + x.orders }), { spend: 0, att: 0, impressions: 0, clicks: 0, orders: 0 });
+  const funnel = funnelOf(addUp(rows));
+  const funnelByPlatform = c.platforms.map((pl) => ({ code: pl.code, name: pl.name, ...funnelOf(addUp(rows.filter((r) => r.platform === pl.code))) })).filter((x) => x.spend > 0);
+  const prevRows = prevAds.filter((r) => c.platforms.some((pl) => pl.code === r.platform))
+    .map((r) => ({ platform: r.platform, spend: num(r.spend), att: num(r.att), impressions: num(r.impressions), clicks: num(r.clicks), orders: num(r.orders) }));
+  const prevFunnel = p.prev ? funnelOf(addUp(prevRows)) : null;
+  const prevFunnelByPlatform = p.prev ? new Map(prevRows.map((r) => [r.platform, funnelOf(r)])) : null;
   const below = rows.filter((r) => r.flag === "Below target");
   const suppressed = supp.map((s) => ({ platform: s.platform, name: c.nameOf(s.platform), spend: num(s.spend), att: num(s.att) }));
   const totalSpend = rows.reduce((a, r) => a + r.spend, 0);
@@ -296,6 +311,7 @@ export async function adsModel(c: Ctx, p: Period) {
   return {
     rows, totalSpend, totalAtt, roas: totalSpend ? totalAtt / totalSpend : 0, belowSpend: below.reduce((a, r) => a + r.spend, 0), suppressed,
     prevSpend, prevRoas: prevSpend ? (prevAtt ?? 0) / prevSpend : null,
+    funnel, prevFunnel, funnelByPlatform, prevFunnelByPlatform,
   };
 }
 

@@ -15,6 +15,8 @@ export type Insight = {
 export type AnalysisResult = { ok: true; insight: Insight | null; raw?: string; cached: boolean; model: string } | { ok: false; error: string };
 
 const r = (n: number, d = 0) => Math.round(n * 10 ** d) / 10 ** d;
+// the ad funnel in Claude's input: views, clicks, orders and their rates and costs
+const funnelOut = (x: { impressions: number; clicks: number; orders: number; ctr: number | null; cpc: number | null; conversion: number | null; costPerOrder: number | null } | null | undefined) => x ? ({ adViews: x.impressions, clicks: x.clicks, orders: x.orders, ctr: x.ctr === null ? null : r(x.ctr, 4), cpc: x.cpc === null ? null : r(x.cpc, 2), conversionRate: x.conversion === null ? null : r(x.conversion, 3), costPerOrder: x.costPerOrder === null ? null : r(x.costPerOrder, 1) }) : null;
 
 export async function payload(module: ModuleName, query: PeriodQuery, platform?: string): Promise<{ brandId: string; data: unknown } | null> {
   const c = await getCtx();
@@ -52,6 +54,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
         totals: { adSpend: r(m.totalSpend), attributedSales: r(m.totalAtt), roas: r(m.roas, 2), spendInCampaignsBelowTargetRoas: r(m.belowSpend), adSpendPreviousPeriod: m.prevSpend === null ? null : r(m.prevSpend), roasPreviousPeriod: m.prevRoas === null ? null : r(m.prevRoas, 2) },
         campaigns: m.rows.slice(0, 14).map((x) => ({ platform: x.name, campaign: x.campaign, type: x.type, objective: x.objective, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, shareOfPlatformSpend: r(x.spendShare, 3), lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
         spendOnSuppressedListings: m.suppressed.map((x) => ({ platform: x.name, spend: r(x.spend), attributedSales: r(x.att) })),
+        adFunnel: { note: "ctr = clicks / ad views; cpc = spend / clicks; conversionRate = orders / clicks; costPerOrder = spend / orders (7-day attribution)", all: funnelOut(m.funnel), allPreviousPeriod: funnelOut(m.prevFunnel), byPlatform: m.funnelByPlatform.map((x) => ({ platform: x.name, ...funnelOut(x), previousPeriod: funnelOut(m.prevFunnelByPlatform?.get(x.code)) })) },
       } };
     }
     case "promotions": {
@@ -88,6 +91,7 @@ export async function payload(module: ModuleName, query: PeriodQuery, platform?:
           adSpend: r(spend), roas: ov ? r(ov.roas, 2) : null, adSpendPctOfSales: ov ? r(ov.spendPct, 3) : null,
           campaigns: camps.slice(0, 10).map((x) => ({ campaign: x.campaign, type: x.type, spend: r(x.spend), roas: r(x.roas, 2), targetRoas: x.target, lostShareBudget: r(x.lostShare, 3), flag: x.flag })),
           spendOnSuppressedListings: mine(ad.suppressed).map((x) => r(x.spend))[0] ?? 0,
+          adFunnel: funnelOut(ad.funnelByPlatform.find((x) => x.code === pl.code)), adFunnelPreviousPeriod: funnelOut(ad.prevFunnelByPlatform?.get(pl.code)),
         },
         dealsAndPromotions: {
           method: "Each run is compared with the SKU's non-promo days in the 14 days before it, after platform margin, COGS and the brand-funded discount.",
